@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Npgsql;
 
 namespace GeekOAuth.Data;
 
@@ -10,8 +11,10 @@ public class OpenIddictDbContextFactory : IDesignTimeDbContextFactory<OpenIddict
         var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
             ?? "Host=localhost;Database=geek_oauth_dev;Username=postgres;Password=postgres";
 
+        var dataSource = new NpgsqlDataSourceBuilder(connectionString).Build();
+
         var options = new DbContextOptionsBuilder<OpenIddictDbContext>()
-            .UseNpgsql(connectionString)
+            .UseNpgsql(dataSource)
             .UseOpenIddict()
             .Options;
 

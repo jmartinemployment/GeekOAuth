@@ -30,16 +30,23 @@ try
     var connectionString = builder.Configuration["DATABASE_URL"]
         ?? throw new InvalidOperationException("DATABASE_URL is required");
 
+    // NpgsqlDataSource handles both URI (postgresql://) and keyword=value formats.
+    // NpgsqlConnection/NpgsqlConnectionStringBuilder only accept keyword=value.
+    var dataSource = new NpgsqlDataSourceBuilder(connectionString)
+        .Build();
+
+    builder.Services.AddSingleton(dataSource);
+
     builder.Services.AddDbContext<OpenIddictDbContext>(options =>
     {
-        options.UseNpgsql(connectionString);
+        options.UseNpgsql(dataSource);
         options.UseOpenIddict();
     });
 
     // ── Dapper connection factory ─────────────────────────────────────────────
 
     builder.Services.AddSingleton<IDbConnectionFactory>(_ =>
-        new NpgsqlConnectionFactory(connectionString));
+        new NpgsqlConnectionFactory(dataSource));
 
     // ── Identity (Dapper-backed) ──────────────────────────────────────────────
 
@@ -93,7 +100,7 @@ try
     // ── Health checks ─────────────────────────────────────────────────────────
 
     builder.Services.AddHealthChecks()
-        .AddNpgSql(connectionString, name: "postgres");
+        .AddNpgSql(dataSource.ConnectionString, name: "postgres");
 
     // ── App pipeline ──────────────────────────────────────────────────────────
 
