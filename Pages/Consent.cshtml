@@ -1,0 +1,28 @@
+@page
+@model GeekOAuth.Pages.ConsentModel
+@{
+    ViewData["Title"] = "Authorize application";
+}
+
+<div class="auth-card">
+    <h1 class="auth-title">Authorize application</h1>
+    <p><strong>@Model.ApplicationName</strong> is requesting access to your account.</p>
+
+    @if (Model.Scopes.Any())
+    {
+        <ul class="auth-scope-list">
+            @foreach (var scope in Model.Scopes)
+            {
+                <li>@scope</li>
+            }
+        </ul>
+    }
+
+    <form method="post">
+        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+        <div class="auth-consent-buttons">
+            <button type="submit" name="consent" value="grant" class="auth-button">Allow</button>
+            <button type="submit" name="consent" value="deny" class="auth-button auth-button-secondary">Deny</button>
+        </div>
+    </form>
+</div>

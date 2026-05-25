@@ -1,0 +1,21 @@
+@page
+@model GeekOAuth.Pages.ErrorModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="auth-card">
+    <h1 class="auth-title">Something went wrong</h1>
+    @if (!string.IsNullOrEmpty(Model.ErrorDescription))
+    {
+        <p class="auth-error-description">@Model.ErrorDescription</p>
+    }
+    else
+    {
+        <p>An error occurred. Please try again.</p>
+    }
+    @if (!string.IsNullOrEmpty(Model.Error))
+    {
+        <p class="auth-error-code">Error: @Model.Error</p>
+    }
+</div>
