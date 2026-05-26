@@ -26,7 +26,7 @@ public sealed class PkceFlowTests(GeekOAuthWebApplicationFactory factory)
         var (verifier, challenge) = PkceHelper.Generate();
         var state = Guid.NewGuid().ToString("N");
         const string clientId = "geek-seo-electron";
-        const string redirectUri = "http://127.0.0.1/";
+        const string redirectUri = "http://127.0.0.1";
 
         var authorizePath =
             "/connect/authorize" +
