@@ -65,9 +65,8 @@ public static class OpenIddictExtensions
                     .EnableEndSessionEndpointPassthrough()
                     .EnableStatusCodePagesIntegration();
 
-                // Railway / reverse-proxy: TLS terminates at edge; Kestrel sees HTTP.
-                if (!environment.IsDevelopment())
-                    aspNetCore.DisableTransportSecurityRequirement();
+                // TLS may terminate at the edge (Railway) or be absent for local HTTP dev/tests.
+                aspNetCore.DisableTransportSecurityRequirement();
             })
             .AddValidation(options =>
             {
