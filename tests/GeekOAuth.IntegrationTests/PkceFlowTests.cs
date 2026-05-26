@@ -25,7 +25,7 @@ public sealed class PkceFlowTests(GeekOAuthWebApplicationFactory factory)
 
         using var client = new HttpClient(handler)
         {
-            BaseAddress = factory.Server.BaseAddress,
+            BaseAddress = new Uri($"{GeekOAuthWebApplicationFactory.TestBaseUrl}/"),
         };
 
         await TestAuthHelper.LoginViaFormAsync(client, email, TestAuthHelper.DefaultPassword);
