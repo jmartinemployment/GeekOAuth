@@ -1,0 +1,36 @@
+name: Deploy Railway
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/ci.yml'
+
+concurrency:
+  group: deploy-railway-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@latest
+
+      - name: Deploy GeekOAuth service
+        working-directory: .
+        run: |
+          railway link --project e7aaf7ad-e950-4d80-b579-2b0e1fffd0b3 --environment production --service GeekOAuth
+          railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deployment URL
+        run: echo "Production https://auth.geekatyourspot.com"
