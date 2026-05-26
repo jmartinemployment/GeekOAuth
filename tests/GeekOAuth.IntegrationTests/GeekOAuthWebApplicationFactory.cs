@@ -19,9 +19,10 @@ public sealed class GeekOAuthWebApplicationFactory : WebApplicationFactory<Progr
 
     private async Task ApplyIdentitySchemaAsync()
     {
+        // bin/.../GeekOAuth.IntegrationTests/bin/<cfg>/net10.0 → repo root is five levels up
         var sqlPath = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
-            "..", "..", "..", "..",
+            "..", "..", "..", "..", "..",
             "src", "GeekOAuth.Server", "Data", "identity_tables.sql"));
 
         var sql = await File.ReadAllTextAsync(sqlPath);
