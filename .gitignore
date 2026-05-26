@@ -12,7 +12,7 @@ appsettings.Development.json
 !.env.example
 /tmp/
 
-# Claude Code / Claude.ai (project context — local only, never commit)
+# AI agent context and tooling (local only — never commit)
 CLAUDE.md
 **/CLAUDE.md
 claude.md
@@ -24,7 +24,6 @@ claude.md
 .claude/**
 **/.claude/**
 
-# Cursor / Codex / other agent tooling
 AGENTS.md
 **/AGENTS.md
 agents.md
@@ -37,9 +36,25 @@ agent.md
 **/.agent/
 .agents/
 **/.agents/
+
 .cursor/
 **/.cursor/
-!.cursor/rules/
-!**/.cursor/rules/
+
 agent-transcripts/
 **/agent-transcripts/
+
+# Other assistants / IDE agents
+.copilot/
+**/.copilot/
+.codex/
+**/.codex/
+.aider*
+**/.aider*
+.continue/
+**/.continue/
+.windsurf/
+**/.windsurf/
+.github/copilot-instructions.md
+**/.github/copilot-instructions.md
+GEMINI.md
+**/GEMINI.md

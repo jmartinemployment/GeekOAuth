@@ -1,0 +1,9 @@
+#!/bin/sh
+# Block commits that include AI agent config or context files.
+blocked=$(git diff --cached --name-only --diff-filter=ACMR |
+  grep -iE '(^|/)(\.claude|\.cursor|\.agent|\.agents|\.copilot|\.codex|\.continue|\.windsurf|\.aider|agent-transcripts)(/|$)|(^|/)(CLAUDE|AGENTS?|GEMINI|claude|agents?|gemini)\.md$|copilot-instructions\.md$' || true)
+if [ -n "$blocked" ]; then
+  echo "pre-commit: refusing AI agent paths:" >&2
+  echo "$blocked" >&2
+  exit 1
+fi
