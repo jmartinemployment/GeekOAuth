@@ -94,6 +94,17 @@ curl -sS https://auth.geekatyourspot.com/.well-known/openid-configuration | jq .
 
 Expected issuer: `https://auth.geekatyourspot.com`
 
-## CI
+## CI / GitHub Actions
 
-Every push/PR runs **CI** workflow: `dotnet build` + full test suite (Docker + PKCE E2E on `ubuntu-latest`).
+Workflows live in `.github/workflows/` (CI on every push/PR; Railway deploy on `main`).
+
+**One-time:** GitHub token must include `workflow` scope to push workflow files:
+
+```bash
+gh auth refresh -h github.com -s workflow,repo
+./scripts/push-workflows.sh
+```
+
+Set repo secret **`RAILWAY_TOKEN`** for deploy workflow: `gh secret set RAILWAY_TOKEN --repo jmartinemployment/GeekOAuth`
+
+CI runs `dotnet build` + full test suite (Docker + PKCE E2E on `ubuntu-latest`).
