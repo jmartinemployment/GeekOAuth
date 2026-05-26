@@ -136,13 +136,16 @@ try
 
     await app.RunAsync();
 }
-catch (Exception ex) when (ex is not HostAbortedException)
+catch (HostAbortedException)
+{
+    // WebApplicationFactory stops the host during integration tests — do not flush Serilog here
+    // or the static logger freezes and subsequent test host startups fail.
+    throw;
+}
+catch (Exception ex)
 {
     Log.Fatal(ex, "GeekOAuth host terminated unexpectedly");
-}
-finally
-{
-    Log.CloseAndFlush();
+    throw;
 }
 
 public partial class Program

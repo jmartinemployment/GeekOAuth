@@ -7,6 +7,8 @@ namespace GeekOAuth.IntegrationTests;
 
 public sealed class GeekOAuthWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    public const string TestBaseUrl = "http://127.0.0.1:8765";
+
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
         .WithImage("postgres:16-alpine")
         .Build();
@@ -57,12 +59,18 @@ public sealed class GeekOAuthWebApplicationFactory : WebApplicationFactory<Progr
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
+        builder.UseUrls(TestBaseUrl);
 
         builder.UseSetting("DATABASE_URL", _postgres.GetConnectionString());
-        builder.UseSetting("ISSUER_URL", "https://auth.test.local");
+        builder.UseSetting("ISSUER_URL", TestBaseUrl.TrimEnd('/'));
         builder.UseSetting("CORS_ORIGINS", "https://app.test.local");
         builder.UseSetting("CLIENT_SECRET_GEEKAPI", "integration-test-geekapi-secret-32chars!");
         builder.UseSetting("CLIENT_SECRET_GEEKWEBSITE", "integration-test-website-secret-32chars!");
         builder.UseSetting("DATA_PROTECTION_PURPOSE", "GeekOAuth-IntegrationTests");
+    }
+
+    protected override void ConfigureClient(HttpClient client)
+    {
+        client.BaseAddress = new Uri($"{TestBaseUrl}/");
     }
 }

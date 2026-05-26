@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GeekOAuth.IntegrationTests;
 
-public sealed class PkceFlowTests(GeekOAuthWebApplicationFactory factory) : IClassFixture<GeekOAuthWebApplicationFactory>
+[Collection(AuthServerCollection.Name)]
+public sealed class PkceFlowTests(GeekOAuthWebApplicationFactory factory)
 {
     [DockerFact]
     public async Task AuthorizationCode_WithPkce_ReturnsJwtAccessToken()

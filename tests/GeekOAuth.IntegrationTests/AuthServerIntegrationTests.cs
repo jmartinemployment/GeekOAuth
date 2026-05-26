@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace GeekOAuth.IntegrationTests;
 
-public sealed class AuthServerIntegrationTests(GeekOAuthWebApplicationFactory factory) : IClassFixture<GeekOAuthWebApplicationFactory>
+[Collection(AuthServerCollection.Name)]
+public sealed class AuthServerIntegrationTests(GeekOAuthWebApplicationFactory factory)
 {
     private HttpClient Client => field ??= factory.CreateClient(new WebApplicationFactoryClientOptions
     {
