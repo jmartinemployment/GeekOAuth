@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GeekOAuth.Abstractions/GeekOAuth.Abstractions.csproj" />
+    <Project Path="src/GeekOAuth.Application/GeekOAuth.Application.csproj" />
+    <Project Path="src/GeekOAuth.Infrastructure/GeekOAuth.Infrastructure.csproj" />
+    <Project Path="src/GeekOAuth.Server/GeekOAuth.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GeekOAuth.IntegrationTests/GeekOAuth.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

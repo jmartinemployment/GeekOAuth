@@ -1,0 +1,41 @@
+@page
+@model GeekOAuth.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Create account";
+}
+
+<div class="auth-card">
+    <h1 class="auth-title">Create account</h1>
+
+    @if (Model.RegistrationSent)
+    {
+        <p class="auth-hint">Check your email for a confirmation link. In Development, the link is also written to the server console.</p>
+        <p><a href="/Account/Login">Back to sign in</a></p>
+    }
+    else
+    {
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="auth-error">@Model.ErrorMessage</div>
+        }
+
+        <form method="post">
+            <div class="auth-field">
+                <label asp-for="Input.Email">Email</label>
+                <input asp-for="Input.Email" type="email" autocomplete="email" autofocus />
+                <span asp-validation-for="Input.Email" class="auth-validation"></span>
+            </div>
+            <div class="auth-field">
+                <label asp-for="Input.Password">Password</label>
+                <input asp-for="Input.Password" type="password" autocomplete="new-password" />
+                <span asp-validation-for="Input.Password" class="auth-validation"></span>
+            </div>
+            <div class="auth-field">
+                <label asp-for="Input.ConfirmPassword">Confirm password</label>
+                <input asp-for="Input.ConfirmPassword" type="password" autocomplete="new-password" />
+            </div>
+            <button type="submit" class="auth-button">Create account</button>
+        </form>
+        <p class="auth-footer"><a href="/Account/Login">Already have an account?</a></p>
+    }
+</div>

@@ -1,0 +1,37 @@
+@page
+@model GeekOAuth.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<div class="auth-card">
+    <h1 class="auth-title">Sign in</h1>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="auth-error">@Model.ErrorMessage</div>
+    }
+
+    <form method="post" autocomplete="on">
+        <div class="auth-field">
+            <label asp-for="Input.Email">Email</label>
+            <input asp-for="Input.Email" type="email" autocomplete="email" autofocus />
+            <span asp-validation-for="Input.Email" class="auth-validation"></span>
+        </div>
+
+        <div class="auth-field">
+            <label asp-for="Input.Password">Password</label>
+            <input asp-for="Input.Password" type="password" autocomplete="current-password" />
+            <span asp-validation-for="Input.Password" class="auth-validation"></span>
+        </div>
+
+        <div class="auth-field auth-checkbox">
+            <input asp-for="Input.RememberMe" type="checkbox" />
+            <label asp-for="Input.RememberMe">Keep me signed in</label>
+        </div>
+
+        <input type="hidden" asp-for="ReturnUrl" />
+        <button type="submit" class="auth-button">Sign in</button>
+    </form>
+    <p class="auth-footer"><a href="/Account/ForgotPassword">Forgot password?</a> · <a href="/Account/Register">Create account</a></p>
+</div>

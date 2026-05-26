@@ -1,0 +1,14 @@
+@page
+@model GeekOAuth.Pages.Account.ConfirmEmailModel
+@{
+    ViewData["Title"] = "Confirm email";
+}
+
+<div class="auth-card">
+    <h1 class="auth-title">Confirm email</h1>
+    <p class="auth-hint">@Model.Message</p>
+    @if (Model.Succeeded)
+    {
+        <a class="auth-button" href="/Account/Login">Sign in</a>
+    }
+</div>

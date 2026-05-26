@@ -1,0 +1,40 @@
+@page
+@model GeekOAuth.Pages.Account.EnableAuthenticatorModel
+@{
+    ViewData["Title"] = "Two-factor authentication";
+}
+
+<div class="auth-card">
+    <h1 class="auth-title">Set up authenticator</h1>
+
+    @if (Model.CodesGenerated)
+    {
+        <p class="auth-hint">Save these recovery codes in a secure place:</p>
+        <ul class="auth-codes">
+            @foreach (var code in Model.RecoveryCodes)
+            {
+                <li>@code</li>
+            }
+        </ul>
+        <a class="auth-button" href="/">Done</a>
+    }
+    else
+    {
+        <p class="auth-hint">Scan this URI in your authenticator app, or enter the key manually.</p>
+        <p class="auth-mono">@Model.AuthenticatorUri</p>
+        <p class="auth-mono">Key: @Model.SharedKey</p>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="auth-error">@Model.ErrorMessage</div>
+        }
+
+        <form method="post">
+            <div class="auth-field">
+                <label asp-for="Input.Code">Verification code</label>
+                <input asp-for="Input.Code" autocomplete="one-time-code" />
+            </div>
+            <button type="submit" class="auth-button">Verify</button>
+        </form>
+    }
+</div>
