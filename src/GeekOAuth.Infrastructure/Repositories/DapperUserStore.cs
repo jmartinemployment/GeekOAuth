@@ -24,6 +24,7 @@ public class DapperUserStore(IUserRepository repo) :
     {
         user.Id = Guid.NewGuid().ToString();
         user.ConcurrencyStamp = Guid.NewGuid().ToString();
+        user.SecurityStamp ??= Guid.NewGuid().ToString();
         await repo.CreateAsync(user);
         return IdentityResult.Success;
     }
@@ -83,8 +84,16 @@ public class DapperUserStore(IUserRepository repo) :
 
     // ── IUserSecurityStampStore ──────────────────────────────────────────────
 
-    public async Task<string?> GetSecurityStampAsync(ApplicationUser user, CancellationToken ct) =>
-        await repo.GetSecurityStampAsync(user.Id);
+    public async Task<string?> GetSecurityStampAsync(ApplicationUser user, CancellationToken ct)
+    {
+        if (!string.IsNullOrEmpty(user.SecurityStamp))
+            return user.SecurityStamp;
+
+        if (string.IsNullOrEmpty(user.Id))
+            return null;
+
+        return await repo.GetSecurityStampAsync(user.Id);
+    }
 
     public async Task SetSecurityStampAsync(ApplicationUser user, string stamp, CancellationToken ct)
     {

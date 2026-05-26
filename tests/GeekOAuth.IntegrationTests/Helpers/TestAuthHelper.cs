@@ -20,6 +20,7 @@ internal static class TestAuthHelper
             UserName = email,
             Email = email,
             EmailConfirmed = true,
+            SecurityStamp = Guid.NewGuid().ToString(),
         };
 
         var result = await userManager.CreateAsync(user, DefaultPassword);
