@@ -64,25 +64,25 @@ railway up --detach
 
 The app listens on port **8080** inside Railway (set in Railway Networking, not in DNS).
 
-If `https://geekoauth-production.up.railway.app/health` is **Healthy** but
-`https://auth.geekatyourspot.com/health` returns `404 Application not found`, the
-CNAME target Railway gave you (`*.up.railway.app`) may be orphaned. **Fix in Namecheap:**
+Public hostname is **`auth.geekatyourspot.com`** (not `oauth.geekatyourspot.com`).
 
-| Type | Host | Value |
-|------|------|--------|
-| **CNAME** | `auth` | **`geekoauth-production.up.railway.app`** |
+If `https://auth.geekatyourspot.com/health` returns `404 Application not found`:
 
-Do **not** use a stale hostname like `mlrz6mwl.up.railway.app` if that host also returns 404.
+1. Railway → **GeekOAuth** → **Networking** → confirm custom domain `auth.geekatyourspot.com` (port **8080**).
+2. Copy the **CNAME target Railway shows for that domain** (often `something.up.railway.app`, e.g. `mlrz6mwl.up.railway.app`).
+3. In Namecheap **Advanced DNS**, set host **`auth`** → that exact CNAME. Do not guess from the service URL (`geekoauth-production.up.railway.app` is a different hostname).
 
 Verify:
 
 ```bash
 dig +short auth.geekatyourspot.com CNAME
 curl -sS https://auth.geekatyourspot.com/health
+curl -sS https://auth.geekatyourspot.com/.well-known/openid-configuration | jq -r .issuer
 ```
 
-Alternatively, remove and re-add the domain in Railway → GeekOAuth → Networking (port **8080**)
-and use the **new** CNAME Railway prints.
+Expected issuer: `https://auth.geekatyourspot.com/`
+
+If the CNAME is wrong or stale, remove and re-add the domain in Railway Networking and update Namecheap to the new target.
 
 ## Verify
 
