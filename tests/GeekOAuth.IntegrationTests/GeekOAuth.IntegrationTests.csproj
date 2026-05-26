@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\src\GeekOAuth.Server\Data\identity_tables.sql" Link="Data\identity_tables.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\GeekOAuth.Server\GeekOAuth.Server.csproj" />
   </ItemGroup>
 

@@ -5,7 +5,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 namespace GeekOAuth.Server.Infrastructure;
 
 public class ClientSeeder(
-    IOpenIddictApplicationManager appManager,
+    IServiceScopeFactory scopeFactory,
     IConfiguration config,
     IHostApplicationLifetime lifetime) : ApplicationStartedHostedService(lifetime)
 {
@@ -13,12 +13,15 @@ public class ClientSeeder(
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        await SeedElectronClient(ct);
-        await SeedGeekApiClient(ct);
-        await SeedWebsiteClient(ct);
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+
+        await SeedElectronClient(appManager, ct);
+        await SeedGeekApiClient(appManager, ct);
+        await SeedWebsiteClient(appManager, ct);
     }
 
-    private async Task SeedElectronClient(CancellationToken ct)
+    private static async Task SeedElectronClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
     {
         const string clientId = "geek-seo-electron";
         if (await appManager.FindByClientIdAsync(clientId, ct) is not null) return;
@@ -49,7 +52,26 @@ public class ClientSeeder(
         }, ct);
     }
 
-    private async Task SeedM2mClient(string clientId, string displayName, string secret, CancellationToken ct)
+    private async Task SeedGeekApiClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        var secret = config["CLIENT_SECRET_GEEKAPI"]
+            ?? throw new InvalidOperationException("CLIENT_SECRET_GEEKAPI is required");
+        await SeedM2mClient(appManager, "geekapi", "GeekAPI (M2M)", secret, ct);
+    }
+
+    private async Task SeedWebsiteClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        var secret = config["CLIENT_SECRET_GEEKWEBSITE"]
+            ?? throw new InvalidOperationException("CLIENT_SECRET_GEEKWEBSITE is required");
+        await SeedM2mClient(appManager, "geekatyourspot-website", "GeekatYourSpot Website", secret, ct);
+    }
+
+    private static async Task SeedM2mClient(
+        IOpenIddictApplicationManager appManager,
+        string clientId,
+        string displayName,
+        string secret,
+        CancellationToken ct)
     {
         if (await appManager.FindByClientIdAsync(clientId, ct) is not null) return;
 
@@ -72,17 +94,4 @@ public class ClientSeeder(
         }, ct);
     }
 
-    private Task SeedGeekApiClient(CancellationToken ct)
-    {
-        var secret = config["CLIENT_SECRET_GEEKAPI"]
-            ?? throw new InvalidOperationException("CLIENT_SECRET_GEEKAPI is required");
-        return SeedM2mClient("geekapi", "GeekAPI (M2M)", secret, ct);
-    }
-
-    private Task SeedWebsiteClient(CancellationToken ct)
-    {
-        var secret = config["CLIENT_SECRET_GEEKWEBSITE"]
-            ?? throw new InvalidOperationException("CLIENT_SECRET_GEEKWEBSITE is required");
-        return SeedM2mClient("geekatyourspot-website", "GeekatYourSpot Website", secret, ct);
-    }
 }

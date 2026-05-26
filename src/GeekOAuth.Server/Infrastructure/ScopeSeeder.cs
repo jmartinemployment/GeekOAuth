@@ -3,11 +3,14 @@ using OpenIddict.Abstractions;
 namespace GeekOAuth.Server.Infrastructure;
 
 public class ScopeSeeder(
-    IOpenIddictScopeManager scopeManager,
+    IServiceScopeFactory scopeFactory,
     IHostApplicationLifetime lifetime) : ApplicationStartedHostedService(lifetime)
 {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var scopeManager = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+
         var scopes = new[]
         {
             new OpenIddictScopeDescriptor { Name = "openid",          DisplayName = "OpenID" },

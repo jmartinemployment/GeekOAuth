@@ -6,7 +6,7 @@ namespace GeekOAuth.IntegrationTests;
 
 public sealed class AuthServerIntegrationTests(GeekOAuthWebApplicationFactory factory) : IClassFixture<GeekOAuthWebApplicationFactory>
 {
-    private readonly HttpClient _client = factory.CreateClient(new WebApplicationFactoryClientOptions
+    private HttpClient Client => field ??= factory.CreateClient(new WebApplicationFactoryClientOptions
     {
         AllowAutoRedirect = false,
     });
@@ -14,7 +14,7 @@ public sealed class AuthServerIntegrationTests(GeekOAuthWebApplicationFactory fa
     [DockerFact]
     public async Task Health_ReturnsHealthy()
     {
-        var response = await _client.GetAsync("/health");
+        var response = await Client.GetAsync("/health");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
@@ -25,7 +25,7 @@ public sealed class AuthServerIntegrationTests(GeekOAuthWebApplicationFactory fa
     [DockerFact]
     public async Task OpenIdConfiguration_IncludesAuthorizeEndpoint()
     {
-        var response = await _client.GetAsync("/.well-known/openid-configuration");
+        var response = await Client.GetAsync("/.well-known/openid-configuration");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
@@ -37,21 +37,21 @@ public sealed class AuthServerIntegrationTests(GeekOAuthWebApplicationFactory fa
     [DockerFact]
     public async Task RegisterPage_ReturnsOk()
     {
-        var response = await _client.GetAsync("/Account/Register");
+        var response = await Client.GetAsync("/Account/Register");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [DockerFact]
     public async Task LoginPage_ReturnsOk()
     {
-        var response = await _client.GetAsync("/Account/Login");
+        var response = await Client.GetAsync("/Account/Login");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [DockerFact]
     public async Task TokenEndpoint_WithoutCredentials_ReturnsBadRequest()
     {
-        var response = await _client.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+        var response = await Client.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "client_credentials",
         }));

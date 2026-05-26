@@ -19,12 +19,7 @@ public sealed class GeekOAuthWebApplicationFactory : WebApplicationFactory<Progr
 
     private async Task ApplyIdentitySchemaAsync()
     {
-        // bin/.../GeekOAuth.IntegrationTests/bin/<cfg>/net10.0 → repo root is five levels up
-        var sqlPath = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..", "..", "..", "..", "..",
-            "src", "GeekOAuth.Server", "Data", "identity_tables.sql"));
-
+        var sqlPath = ResolveIdentityTablesSqlPath();
         var sql = await File.ReadAllTextAsync(sqlPath);
         await using var connection = new NpgsqlConnection(_postgres.GetConnectionString());
         await connection.OpenAsync();
@@ -36,6 +31,27 @@ public sealed class GeekOAuthWebApplicationFactory : WebApplicationFactory<Progr
     {
         await _postgres.DisposeAsync();
         await base.DisposeAsync();
+    }
+
+    private static string ResolveIdentityTablesSqlPath()
+    {
+        var candidates = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "Data", "identity_tables.sql"),
+            Path.GetFullPath(Path.Combine(
+                AppContext.BaseDirectory,
+                "..", "..", "..", "..", "..",
+                "src", "GeekOAuth.Server", "Data", "identity_tables.sql")),
+        };
+
+        foreach (var path in candidates)
+        {
+            if (File.Exists(path))
+                return path;
+        }
+
+        throw new FileNotFoundException(
+            "identity_tables.sql not found. Expected at: " + string.Join(" or ", candidates));
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
