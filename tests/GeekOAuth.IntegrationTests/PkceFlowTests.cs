@@ -11,22 +11,15 @@ public sealed class PkceFlowTests(GeekOAuthWebApplicationFactory factory)
     [DockerFact]
     public async Task AuthorizationCode_WithPkce_ReturnsJwtAccessToken()
     {
-        using var warmup = factory.CreateClient();
-        await ServerReadiness.WaitUntilReadyAsync(warmup);
-
-        var email = await TestAuthHelper.SeedConfirmedUserAsync(factory.Services);
-
-        var handler = new HttpClientHandler
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,
-            UseCookies = true,
-            CookieContainer = new CookieContainer(),
-        };
+            HandleCookies = true,
+        });
 
-        using var client = new HttpClient(handler)
-        {
-            BaseAddress = new Uri($"{GeekOAuthWebApplicationFactory.TestBaseUrl}/"),
-        };
+        await ServerReadiness.WaitUntilReadyAsync(client);
+
+        var email = await TestAuthHelper.SeedConfirmedUserAsync(factory.Services);
 
         await TestAuthHelper.LoginViaFormAsync(client, email, TestAuthHelper.DefaultPassword);
 
