@@ -37,7 +37,9 @@ agent.md
 **/.agent/
 .agents/
 **/.agents/
-.cursor/agents/
-**/.cursor/agents/
+.cursor/
+**/.cursor/
+!.cursor/rules/
+!**/.cursor/rules/
 agent-transcripts/
 **/agent-transcripts/

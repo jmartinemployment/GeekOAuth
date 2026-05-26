@@ -6,7 +6,7 @@ namespace GeekOAuth.Application.Security;
 /// <summary>
 /// Holds a precomputed password hash used solely to normalize login timing when the email is unknown.
 /// </summary>
-public sealed class TimingSafePasswordVerifier(PasswordHasher<ApplicationUser> passwordHasher)
+public sealed class TimingSafePasswordVerifier(IPasswordHasher<ApplicationUser> passwordHasher)
 {
     private readonly string _dummyHash = passwordHasher.HashPassword(
         new ApplicationUser { Id = Guid.Empty.ToString() },

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Strip all Co-authored-by trailers so AI agents never appear in commit metadata.
+MSG_FILE="$1"
+tmp="$(mktemp)"
+grep -viE '^co-authored-by:' "$MSG_FILE" > "$tmp" || true
+mv "$tmp" "$MSG_FILE"

@@ -117,6 +117,8 @@ try
     app.MapRazorPages();
     app.MapControllers();
 
+    app.MapGet("/", () => Results.Redirect("/Account/Login"));
+
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
     {
         ResponseWriter = async (context, report) =>
