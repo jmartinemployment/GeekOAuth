@@ -5,6 +5,20 @@ Public URL: **https://auth.geekatyourspot.com**
 
 ## One-time setup
 
+### 0. GitHub Actions workflows (local only until pushed)
+
+Workflow files live in `.github/workflows/` but require the `workflow` OAuth scope to push.
+From your machine:
+
+```bash
+gh auth refresh -h github.com -s workflow
+git add .github/workflows/
+git commit -m "ci: add GitHub Actions build and Railway deploy workflows"
+git push origin main
+```
+
+Add repo secret `RAILWAY_TOKEN` before the deploy workflow can run.
+
 ### 1. GitHub secrets (for CI deploy workflow)
 
 In the GitHub repo → Settings → Secrets → Actions, add:
@@ -46,9 +60,25 @@ railway link --project GeekOAuth --environment production --service GeekOAuth
 railway up --detach
 ```
 
+## Custom domain troubleshooting
+
+The app may be healthy on the Railway URL (`https://geekoauth-production.up.railway.app`)
+while `auth.geekatyourspot.com` returns `404 Application not found`. That means DNS
+points at a **different** Railway hostname than the one serving this service.
+
+Check:
+
+```bash
+dig +short auth.geekatyourspot.com CNAME
+```
+
+In Railway → **GeekOAuth** → **Settings** → **Networking**, re-attach the custom domain
+or copy the CNAME target Railway shows for this service, then update your registrar.
+
 ## Verify
 
 ```bash
+curl -sS https://geekoauth-production.up.railway.app/health
 curl -sS https://auth.geekatyourspot.com/health
 curl -sS https://auth.geekatyourspot.com/.well-known/openid-configuration | jq .issuer
 ```
