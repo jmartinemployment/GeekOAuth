@@ -60,20 +60,29 @@ railway link --project GeekOAuth --environment production --service GeekOAuth
 railway up --detach
 ```
 
-## Custom domain troubleshooting
+## Custom domain troubleshooting (Namecheap)
 
-The app may be healthy on the Railway URL (`https://geekoauth-production.up.railway.app`)
-while `auth.geekatyourspot.com` returns `404 Application not found`. That means DNS
-points at a **different** Railway hostname than the one serving this service.
+The app listens on port **8080** inside Railway (set in Railway Networking, not in DNS).
 
-Check:
+If `https://geekoauth-production.up.railway.app/health` is **Healthy** but
+`https://auth.geekatyourspot.com/health` returns `404 Application not found`, the
+CNAME target Railway gave you (`*.up.railway.app`) may be orphaned. **Fix in Namecheap:**
+
+| Type | Host | Value |
+|------|------|--------|
+| **CNAME** | `auth` | **`geekoauth-production.up.railway.app`** |
+
+Do **not** use a stale hostname like `mlrz6mwl.up.railway.app` if that host also returns 404.
+
+Verify:
 
 ```bash
 dig +short auth.geekatyourspot.com CNAME
+curl -sS https://auth.geekatyourspot.com/health
 ```
 
-In Railway → **GeekOAuth** → **Settings** → **Networking**, re-attach the custom domain
-or copy the CNAME target Railway shows for this service, then update your registrar.
+Alternatively, remove and re-add the domain in Railway → GeekOAuth → Networking (port **8080**)
+and use the **new** CNAME Railway prints.
 
 ## Verify
 
