@@ -16,15 +16,21 @@ public class LoginModel(
     IAuditLogger audit) : PageModel
 {
     [BindProperty] public InputModel Input { get; set; } = new();
-    [BindProperty] public string? ReturnUrl { get; set; }
+    [BindProperty(SupportsGet = true)] public string? ReturnUrl { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? SuccessMessage { get; set; }
 
-    public void OnGet(string? returnUrl = null) => ReturnUrl = returnUrl;
+    public IActionResult OnGet(string? message = null)
+    {
+        if (message == "signed-in")
+            SuccessMessage = "You are signed in. Return to Geek SEO and click Sign in again to continue.";
+        if (!string.IsNullOrEmpty(ReturnUrl) && User.Identity?.IsAuthenticated == true)
+            return LocalRedirect(ReturnUrl);
+        return Page();
+    }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        ReturnUrl ??= Url.Content("~/");
-
         if (!ModelState.IsValid) return Page();
 
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -34,7 +40,9 @@ public class LoginModel(
         if (attempt.Result.Succeeded)
         {
             audit.LoginSuccess(attempt.User?.Id ?? "unknown", ip, null);
-            return LocalRedirect(ReturnUrl);
+            if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
+                return LocalRedirect(ReturnUrl);
+            return RedirectToPage("/Account/Login", new { message = "signed-in" });
         }
 
         if (attempt.Result.RequiresTwoFactor)

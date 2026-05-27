@@ -118,7 +118,10 @@ try
     app.MapRazorPages();
     app.MapControllers();
 
-    app.MapGet("/", () => Results.Redirect("/Account/Login"));
+    app.MapGet("/", (HttpContext context) =>
+        context.User.Identity?.IsAuthenticated == true
+            ? Results.Redirect("/Account/Login?message=signed-in")
+            : Results.Redirect("/Account/Login"));
 
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
     {

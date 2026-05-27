@@ -7,6 +7,11 @@
 <div class="auth-card">
     <h1 class="auth-title">Sign in</h1>
 
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="auth-success">@Model.SuccessMessage</div>
+    }
+
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
         <div class="auth-error">@Model.ErrorMessage</div>
