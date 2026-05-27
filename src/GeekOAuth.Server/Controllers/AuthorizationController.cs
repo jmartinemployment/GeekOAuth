@@ -37,9 +37,9 @@ public class AuthorizationController(
 
         if (!result.Succeeded)
         {
-            return Challenge(
-                authenticationSchemes: IdentityConstants.ApplicationScheme,
-                properties: new AuthenticationProperties { RedirectUri = Request.PathBase + Request.Path + QueryString.Create(Request.HasFormContentType ? Request.Form.ToList() : Request.Query.ToList()) });
+            // Browsers need 302 to login, not 401 + Location (Chrome shows "HTTP ERROR 401").
+            var returnUrl = $"{Request.PathBase}{Request.Path}{Request.QueryString}";
+            return LocalRedirect($"/Account/Login?ReturnUrl={Uri.EscapeDataString(returnUrl)}");
         }
 
         var user = await userManager.GetUserAsync(result.Principal)
