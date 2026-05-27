@@ -94,6 +94,7 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<OpenIddictDbContext>();
         await MigrateDatabaseWithRetryAsync(db);
+        await OidcClientBootstrap.SeedPublicClientsAsync(scope.ServiceProvider);
     }
 
     app.UseForwardedHeaders();

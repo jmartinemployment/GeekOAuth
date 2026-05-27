@@ -1,3 +1,5 @@
+using Serilog;
+
 namespace GeekOAuth.Server.Infrastructure;
 
 /// <summary>
@@ -23,6 +25,11 @@ public abstract class ApplicationStartedHostedService(IHostApplicationLifetime l
         try
         {
             await ExecuteAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "{Seeder} failed during application startup", GetType().Name);
+            throw;
         }
         finally
         {
