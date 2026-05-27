@@ -1,3 +1,4 @@
+using Dapper;
 using GeekOAuth.Abstractions.Data;
 using GeekOAuth.Abstractions.Models;
 using GeekOAuth.Abstractions.Repositories;
@@ -10,6 +11,9 @@ namespace GeekOAuth.Infrastructure.DependencyInjection;
 
 public static class InfrastructureServiceCollectionExtensions
 {
+    static InfrastructureServiceCollectionExtensions() =>
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
+
     public static IServiceCollection AddGeekOAuthInfrastructure(
         this IServiceCollection services,
         NpgsqlDataSource dataSource)

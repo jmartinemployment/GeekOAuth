@@ -46,7 +46,8 @@ internal static class TestAuthHelper
         });
 
         using var response = await client.PostAsync("/Account/Login", form);
-        if (response.Headers.Location is null && !response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"Login failed: {(int)response.StatusCode}");
+        if (response.Headers.Location is null)
+            throw new InvalidOperationException(
+                $"Login did not redirect (status {(int)response.StatusCode}). Check EmailConfirmed mapping and password.");
     }
 }
