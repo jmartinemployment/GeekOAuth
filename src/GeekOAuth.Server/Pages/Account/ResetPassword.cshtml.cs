@@ -43,7 +43,7 @@ public class ResetPasswordModel(IUserAccountService accounts) : PageModel
         public string Email { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
 
-        [Required, DataType(DataType.Password), MinLength(12)]
+        [Required, DataType(DataType.Password), MinLength(8)]
         public string Password { get; set; } = string.Empty;
 
         [Required, DataType(DataType.Password), Compare(nameof(Password))]

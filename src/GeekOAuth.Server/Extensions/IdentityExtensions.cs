@@ -10,7 +10,7 @@ public static class IdentityExtensions
     {
         services.AddIdentityCore<ApplicationUser>(options =>
         {
-            options.Password.RequiredLength = 12;
+            options.Password.RequiredLength = 8;
             options.Password.RequireDigit = true;
             options.Password.RequireNonAlphanumeric = true;
             options.Password.RequireUppercase = true;
