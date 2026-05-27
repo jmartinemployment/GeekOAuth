@@ -3,6 +3,7 @@ using GeekOAuth.Abstractions.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.WebUtilities;
+using Serilog;
 using System.Text;
 
 namespace GeekOAuth.Application.Services;
@@ -25,9 +26,18 @@ public sealed class UserAccountService(
         if (!result.Succeeded)
             return new AccountOperationResult(false, string.Join("; ", result.Errors.Select(e => e.Description)));
 
-        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var link = BuildLink("Account/ConfirmEmail", "userId", user.Id, "code", token);
-        await emailService.SendEmailConfirmationAsync(email, link, cancellationToken);
+        if (string.IsNullOrWhiteSpace(config["SMTP_HOST"]))
+        {
+            var confirmToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            await userManager.ConfirmEmailAsync(user, confirmToken);
+            Log.Information("Email auto-confirmed for {Email} (SMTP_HOST not configured)", email);
+        }
+        else
+        {
+            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var link = BuildLink("Account/ConfirmEmail", "userId", user.Id, "code", token);
+            await emailService.SendEmailConfirmationAsync(email, link, cancellationToken);
+        }
 
         return new AccountOperationResult(true, UserId: user.Id);
     }

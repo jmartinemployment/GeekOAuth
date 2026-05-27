@@ -57,7 +57,7 @@ public class LoginModel(
 
         if (attempt.Result.IsNotAllowed)
         {
-            ErrorMessage = "Invalid email or password.";
+            ErrorMessage = "Confirm your email before signing in. Check your inbox for the confirmation link, or register again if SMTP is not set up yet.";
             audit.LoginFailure(Input.Email, ip, "NotAllowed", 0);
             return Page();
         }
