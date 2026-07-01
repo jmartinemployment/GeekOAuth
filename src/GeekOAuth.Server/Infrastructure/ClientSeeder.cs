@@ -23,10 +23,11 @@ public class ClientSeeder(
         {
             await SeedGeekApiClient(appManager, ct);
             await SeedWebsiteClient(appManager, ct);
+            await SeedGeekGtmClient(appManager, ct);
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "M2M OAuth clients were not seeded — set CLIENT_SECRET_GEEKAPI and CLIENT_SECRET_GEEKWEBSITE");
+            Log.Warning(ex, "M2M OAuth clients were not seeded — set CLIENT_SECRET_GEEKAPI, CLIENT_SECRET_GEEKWEBSITE, and optionally CLIENT_SECRET_GEEKGTM");
         }
     }
 
@@ -42,6 +43,18 @@ public class ClientSeeder(
         var secret = config["CLIENT_SECRET_GEEKWEBSITE"]
             ?? throw new InvalidOperationException("CLIENT_SECRET_GEEKWEBSITE is required");
         await SeedM2mClient(appManager, "geekatyourspot-website", "GeekatYourSpot Website", secret, ct);
+    }
+
+    private async Task SeedGeekGtmClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        var secret = config["CLIENT_SECRET_GEEKGTM"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            Log.Information("CLIENT_SECRET_GEEKGTM not set — skipping geekgtm M2M client seed");
+            return;
+        }
+
+        await SeedM2mClient(appManager, "geekgtm", "Geek GTM MCP", secret, ct);
     }
 
     private static async Task SeedM2mClient(
