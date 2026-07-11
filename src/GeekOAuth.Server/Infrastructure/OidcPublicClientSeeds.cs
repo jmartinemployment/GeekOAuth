@@ -15,6 +15,7 @@ internal static class OidcPublicClientSeeds
         var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
         await SeedElectronClient(appManager, ct);
         await SeedGeekSeoWebClient(appManager, ct);
+        await SeedGeekAdminClient(appManager, ct);
     }
 
     private static async Task SeedElectronClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
@@ -68,6 +69,45 @@ internal static class OidcPublicClientSeeds
             {
                 new Uri("https://seo.geekatyourspot.com/"),
                 new Uri("http://localhost:3000/"),
+            },
+            Permissions =
+            {
+                Permissions.Endpoints.Authorization,
+                Permissions.Endpoints.Token,
+                Permissions.Endpoints.EndSession,
+                Permissions.GrantTypes.AuthorizationCode,
+                Permissions.GrantTypes.RefreshToken,
+                Permissions.ResponseTypes.Code,
+                Permissions.Prefixes.Scope + "openid",
+                Permissions.Scopes.Profile,
+                Permissions.Scopes.Email,
+                Permissions.Prefixes.Scope + "offline_access",
+            },
+            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
+            ConsentType = ConsentTypes.Implicit,
+        }, ct);
+        Log.Information("OpenIddict client {ClientId} created", clientId);
+    }
+
+    private static async Task SeedGeekAdminClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        const string clientId = "geek-admin";
+        if (await appManager.FindByClientIdAsync(clientId, ct) is not null) return;
+
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            ClientType = ClientTypes.Public,
+            DisplayName = "Geek Blog Admin",
+            RedirectUris =
+            {
+                new Uri("https://admin.geekatyourspot.com/auth/callback"),
+                new Uri("http://localhost:3002/auth/callback"),
+            },
+            PostLogoutRedirectUris =
+            {
+                new Uri("https://admin.geekatyourspot.com/"),
+                new Uri("http://localhost:3002/"),
             },
             Permissions =
             {
