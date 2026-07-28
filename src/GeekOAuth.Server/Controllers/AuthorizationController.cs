@@ -46,11 +46,16 @@ public class AuthorizationController(
         {
             // Browsers need 302 to login, not 401 + Location (Chrome shows "HTTP ERROR 401").
             // Drop prompt=login from the return URL so post-login authorize does not loop.
-            var returnQuery = QueryString.Create(
-                Request.Query
-                    .Where(static p => !string.Equals(p.Key, "prompt", StringComparison.OrdinalIgnoreCase))
-                    .SelectMany(static p => p.Value, static (p, v) => KeyValuePair.Create(p.Key, v)));
-            var returnUrl = $"{Request.PathBase}{Request.Path}{returnQuery}";
+            var pairs = new List<KeyValuePair<string, string?>>();
+            foreach (var parameter in Request.Query)
+            {
+                if (string.Equals(parameter.Key, "prompt", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                foreach (var value in parameter.Value)
+                    pairs.Add(new KeyValuePair<string, string?>(parameter.Key, value));
+            }
+
+            var returnUrl = $"{Request.PathBase}{Request.Path}{QueryString.Create(pairs)}";
             return LocalRedirect($"/Account/Login?ReturnUrl={Uri.EscapeDataString(returnUrl)}");
         }
 
