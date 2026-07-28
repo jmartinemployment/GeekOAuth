@@ -141,8 +141,8 @@ internal static class OidcPublicClientSeeds
             DisplayName = "Content Writer V3",
             RedirectUris =
             {
-                new Uri("https://content-writer.geekatyourspot.com/login"),
-                new Uri("http://localhost:3000/login"),
+                new Uri("https://content-writer.geekatyourspot.com/auth/callback"),
+                new Uri("http://localhost:3000/auth/callback"),
             },
             PostLogoutRedirectUris =
             {
