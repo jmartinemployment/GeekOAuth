@@ -157,9 +157,6 @@ internal static class OidcPublicClientSeeds
             foreach (var uri in postLogoutRedirectUris)
                 descriptor.PostLogoutRedirectUris.Add(uri);
             await appManager.UpdateAsync(existing, descriptor, ct);
-            // #region agent log
-            AgentDebugLog.Write("H3", "OidcPublicClientSeeds.cs:SeedContentWriterV3Client", "content-writer-v3 updated", new { clientId, redirectCount = redirectUris.Length });
-            // #endregion
             Log.Information("OpenIddict client {ClientId} redirect URIs updated", clientId);
             return;
         }
@@ -187,9 +184,6 @@ internal static class OidcPublicClientSeeds
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
             ConsentType = ConsentTypes.Implicit,
         }, ct);
-        // #region agent log
-        AgentDebugLog.Write("H3", "OidcPublicClientSeeds.cs:SeedContentWriterV3Client", "content-writer-v3 created", new { clientId, redirectCount = redirectUris.Length });
-        // #endregion
         Log.Information("OpenIddict client {ClientId} created", clientId);
     }
 }
