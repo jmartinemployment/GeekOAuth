@@ -132,23 +132,45 @@ internal static class OidcPublicClientSeeds
     private static async Task SeedContentWriterV3Client(IOpenIddictApplicationManager appManager, CancellationToken ct)
     {
         const string clientId = "content-writer-v3";
-        if (await appManager.FindByClientIdAsync(clientId, ct) is not null) return;
+        Uri[] redirectUris =
+        [
+            new("https://content-writer.geekatyourspot.com/auth/callback"),
+            new("https://content-writer-v3.vercel.app/auth/callback"),
+            new("http://localhost:3000/auth/callback"),
+        ];
+        Uri[] postLogoutRedirectUris =
+        [
+            new("https://content-writer.geekatyourspot.com/"),
+            new("https://content-writer-v3.vercel.app/"),
+            new("http://localhost:3000/"),
+        ];
+
+        var existing = await appManager.FindByClientIdAsync(clientId, ct);
+        if (existing is not null)
+        {
+            var descriptor = new OpenIddictApplicationDescriptor();
+            await appManager.PopulateAsync(descriptor, existing, ct);
+            descriptor.RedirectUris.Clear();
+            foreach (var uri in redirectUris)
+                descriptor.RedirectUris.Add(uri);
+            descriptor.PostLogoutRedirectUris.Clear();
+            foreach (var uri in postLogoutRedirectUris)
+                descriptor.PostLogoutRedirectUris.Add(uri);
+            await appManager.UpdateAsync(existing, descriptor, ct);
+            // #region agent log
+            AgentDebugLog.Write("H3", "OidcPublicClientSeeds.cs:SeedContentWriterV3Client", "content-writer-v3 updated", new { clientId, redirectCount = redirectUris.Length });
+            // #endregion
+            Log.Information("OpenIddict client {ClientId} redirect URIs updated", clientId);
+            return;
+        }
 
         await appManager.CreateAsync(new OpenIddictApplicationDescriptor
         {
             ClientId = clientId,
             ClientType = ClientTypes.Public,
             DisplayName = "Content Writer V3",
-            RedirectUris =
-            {
-                new Uri("https://content-writer.geekatyourspot.com/auth/callback"),
-                new Uri("http://localhost:3000/auth/callback"),
-            },
-            PostLogoutRedirectUris =
-            {
-                new Uri("https://content-writer.geekatyourspot.com/"),
-                new Uri("http://localhost:3000/"),
-            },
+            RedirectUris = { redirectUris[0], redirectUris[1], redirectUris[2] },
+            PostLogoutRedirectUris = { postLogoutRedirectUris[0], postLogoutRedirectUris[1], postLogoutRedirectUris[2] },
             Permissions =
             {
                 Permissions.Endpoints.Authorization,
@@ -165,6 +187,9 @@ internal static class OidcPublicClientSeeds
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
             ConsentType = ConsentTypes.Implicit,
         }, ct);
+        // #region agent log
+        AgentDebugLog.Write("H3", "OidcPublicClientSeeds.cs:SeedContentWriterV3Client", "content-writer-v3 created", new { clientId, redirectCount = redirectUris.Length });
+        // #endregion
         Log.Information("OpenIddict client {ClientId} created", clientId);
     }
 }
