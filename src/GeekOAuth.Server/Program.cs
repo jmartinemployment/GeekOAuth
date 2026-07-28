@@ -65,7 +65,17 @@ try
 
     builder.Services.AddCors(options =>
         options.AddDefaultPolicy(policy =>
-            policy.WithOrigins(corsOrigins.Length > 0 ? corsOrigins : ["https://invalid.local"])
+            policy.SetIsOriginAllowed(origin =>
+                  {
+                      if (corsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
+                          return true;
+                      // Content Writer V3 production + Vercel preview deployments
+                      return Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                             && uri.Scheme == Uri.UriSchemeHttps
+                             && (uri.Host.Equals("content-writer-v3.vercel.app", StringComparison.OrdinalIgnoreCase)
+                                 || (uri.Host.StartsWith("content-writer-v3-", StringComparison.OrdinalIgnoreCase)
+                                     && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase)));
+                  })
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials()));

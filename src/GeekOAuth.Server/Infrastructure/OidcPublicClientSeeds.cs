@@ -136,12 +136,14 @@ internal static class OidcPublicClientSeeds
         [
             new("https://content-writer.geekatyourspot.com/auth/callback"),
             new("https://content-writer-v3.vercel.app/auth/callback"),
+            new("https://content-writer-v3-git-main-jeff-martins-projects-66716453.vercel.app/auth/callback"),
             new("http://localhost:3000/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
             new("https://content-writer.geekatyourspot.com/"),
             new("https://content-writer-v3.vercel.app/"),
+            new("https://content-writer-v3-git-main-jeff-martins-projects-66716453.vercel.app/"),
             new("http://localhost:3000/"),
         ];
 
@@ -166,8 +168,14 @@ internal static class OidcPublicClientSeeds
             ClientId = clientId,
             ClientType = ClientTypes.Public,
             DisplayName = "Content Writer V3",
-            RedirectUris = { redirectUris[0], redirectUris[1], redirectUris[2] },
-            PostLogoutRedirectUris = { postLogoutRedirectUris[0], postLogoutRedirectUris[1], postLogoutRedirectUris[2] },
+            RedirectUris =
+            {
+                redirectUris[0], redirectUris[1], redirectUris[2], redirectUris[3],
+            },
+            PostLogoutRedirectUris =
+            {
+                postLogoutRedirectUris[0], postLogoutRedirectUris[1], postLogoutRedirectUris[2], postLogoutRedirectUris[3],
+            },
             Permissions =
             {
                 Permissions.Endpoints.Authorization,

@@ -15,6 +15,9 @@ public static class OpenIddictExtensions
             {
                 options.UseEntityFrameworkCore()
                     .UseDbContext<OpenIddictDbContext>();
+                options.ReplaceApplicationManager<
+                    OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication,
+                    ContentWriterAwareApplicationManager>();
             })
             .AddServer(options =>
             {
