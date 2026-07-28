@@ -2,10 +2,12 @@ using System.ComponentModel.DataAnnotations;
 using GeekOAuth.Abstractions.Models;
 using GeekOAuth.Abstractions.Security;
 using GeekOAuth.Abstractions.Services;
+using GeekOAuth.Server.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
 
 namespace GeekOAuth.Pages.Account;
 
@@ -15,6 +17,8 @@ public class LoginModel(
     UserManager<ApplicationUser> userManager,
     IAuditLogger audit) : PageModel
 {
+    private const string ReturnUrlTempDataKey = "LoginReturnUrl";
+
     [BindProperty] public InputModel Input { get; set; } = new();
     [BindProperty(SupportsGet = true)] public string? ReturnUrl { get; set; }
     public string? ErrorMessage { get; set; }
@@ -23,7 +27,27 @@ public class LoginModel(
     public IActionResult OnGet(string? message = null)
     {
         if (message == "signed-in")
-            SuccessMessage = "You are signed in. Return to Geek SEO and click Sign in again to continue.";
+            SuccessMessage = "You are signed in. Return to your application and click Sign in again to continue.";
+
+        // Persist across POST so password managers / stripped hidden fields cannot drop the OAuth return URL.
+        if (!string.IsNullOrEmpty(ReturnUrl))
+            TempData[ReturnUrlTempDataKey] = ReturnUrl;
+        else if (TempData.Peek(ReturnUrlTempDataKey) is string saved && !string.IsNullOrEmpty(saved))
+            ReturnUrl = saved;
+
+        // #region agent log
+        AgentDebugLog.Write("H1", "Login.OnGet", "login GET", new
+        {
+            hasReturnUrl = !string.IsNullOrEmpty(ReturnUrl),
+            returnUrlLen = ReturnUrl?.Length ?? 0,
+            returnUrlPrefix = ReturnUrl is { Length: > 0 } ? ReturnUrl[..Math.Min(48, ReturnUrl.Length)] : null,
+            message,
+            authenticated = User.Identity?.IsAuthenticated == true,
+        });
+        // #endregion
+        Log.Information("Login GET ReturnUrlPresent={Present} Len={Len} Authenticated={Auth}",
+            !string.IsNullOrEmpty(ReturnUrl), ReturnUrl?.Length ?? 0, User.Identity?.IsAuthenticated == true);
+
         if (!string.IsNullOrEmpty(ReturnUrl) && User.Identity?.IsAuthenticated == true)
             return LocalRedirect(ReturnUrl);
         return Page();
@@ -31,6 +55,11 @@ public class LoginModel(
 
     public async Task<IActionResult> OnPostAsync()
     {
+        if (string.IsNullOrEmpty(ReturnUrl) && TempData[ReturnUrlTempDataKey] is string saved)
+            ReturnUrl = saved;
+        else if (!string.IsNullOrEmpty(ReturnUrl))
+            TempData[ReturnUrlTempDataKey] = ReturnUrl;
+
         if (!ModelState.IsValid) return Page();
 
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -40,10 +69,32 @@ public class LoginModel(
         if (attempt.Result.Succeeded)
         {
             audit.LoginSuccess(attempt.User?.Id ?? "unknown", ip, null);
-            if (!string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl))
-                return LocalRedirect(ReturnUrl);
+            var isLocal = !string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl);
+            // #region agent log
+            AgentDebugLog.Write("H2", "Login.OnPost", "login success redirect decision", new
+            {
+                hasReturnUrl = !string.IsNullOrEmpty(ReturnUrl),
+                returnUrlLen = ReturnUrl?.Length ?? 0,
+                returnUrlPrefix = ReturnUrl is { Length: > 0 } ? ReturnUrl[..Math.Min(48, ReturnUrl.Length)] : null,
+                isLocal,
+                willContinueOAuth = isLocal,
+            });
+            // #endregion
+            Log.Information("Login success ReturnUrlPresent={Present} IsLocal={IsLocal} Len={Len}",
+                !string.IsNullOrEmpty(ReturnUrl), isLocal, ReturnUrl?.Length ?? 0);
+
+            if (isLocal)
+            {
+                TempData.Remove(ReturnUrlTempDataKey);
+                return LocalRedirect(ReturnUrl!);
+            }
+
             return RedirectToPage("/Account/Login", new { message = "signed-in" });
         }
+
+        // Keep ReturnUrl available after a failed attempt re-render.
+        if (!string.IsNullOrEmpty(ReturnUrl))
+            TempData[ReturnUrlTempDataKey] = ReturnUrl;
 
         if (attempt.Result.RequiresTwoFactor)
             return RedirectToPage("TwoFactor", new { returnUrl = ReturnUrl });
