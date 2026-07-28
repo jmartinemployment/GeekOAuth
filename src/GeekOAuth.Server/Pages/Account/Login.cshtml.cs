@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 using GeekOAuth.Abstractions.Models;
 using GeekOAuth.Abstractions.Security;
 using GeekOAuth.Abstractions.Services;
-using GeekOAuth.Server.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -35,16 +34,6 @@ public class LoginModel(
         else if (TempData.Peek(ReturnUrlTempDataKey) is string saved && !string.IsNullOrEmpty(saved))
             ReturnUrl = saved;
 
-        // #region agent log
-        AgentDebugLog.Write("H1", "Login.OnGet", "login GET", new
-        {
-            hasReturnUrl = !string.IsNullOrEmpty(ReturnUrl),
-            returnUrlLen = ReturnUrl?.Length ?? 0,
-            returnUrlPrefix = ReturnUrl is { Length: > 0 } ? ReturnUrl[..Math.Min(48, ReturnUrl.Length)] : null,
-            message,
-            authenticated = User.Identity?.IsAuthenticated == true,
-        });
-        // #endregion
         Log.Information("Login GET ReturnUrlPresent={Present} Len={Len} Authenticated={Auth}",
             !string.IsNullOrEmpty(ReturnUrl), ReturnUrl?.Length ?? 0, User.Identity?.IsAuthenticated == true);
 
@@ -70,16 +59,6 @@ public class LoginModel(
         {
             audit.LoginSuccess(attempt.User?.Id ?? "unknown", ip, null);
             var isLocal = !string.IsNullOrEmpty(ReturnUrl) && Url.IsLocalUrl(ReturnUrl);
-            // #region agent log
-            AgentDebugLog.Write("H2", "Login.OnPost", "login success redirect decision", new
-            {
-                hasReturnUrl = !string.IsNullOrEmpty(ReturnUrl),
-                returnUrlLen = ReturnUrl?.Length ?? 0,
-                returnUrlPrefix = ReturnUrl is { Length: > 0 } ? ReturnUrl[..Math.Min(48, ReturnUrl.Length)] : null,
-                isLocal,
-                willContinueOAuth = isLocal,
-            });
-            // #endregion
             Log.Information("Login success ReturnUrlPresent={Present} IsLocal={IsLocal} Len={Len}",
                 !string.IsNullOrEmpty(ReturnUrl), isLocal, ReturnUrl?.Length ?? 0);
 
