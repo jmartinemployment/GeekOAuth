@@ -35,10 +35,22 @@ public class AuthorizationController(
 
         var result = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
 
+        // prompt=login (or max_age=0): force the credentials form even when a session cookie exists.
+        if (result.Succeeded && (request.HasPromptValue(PromptValues.Login) || request.MaxAge is 0))
+        {
+            await signInManager.SignOutAsync();
+            result = AuthenticateResult.Fail("Re-authentication required.");
+        }
+
         if (!result.Succeeded)
         {
             // Browsers need 302 to login, not 401 + Location (Chrome shows "HTTP ERROR 401").
-            var returnUrl = $"{Request.PathBase}{Request.Path}{Request.QueryString}";
+            // Drop prompt=login from the return URL so post-login authorize does not loop.
+            var returnQuery = QueryString.Create(
+                Request.Query
+                    .Where(static p => !string.Equals(p.Key, "prompt", StringComparison.OrdinalIgnoreCase))
+                    .SelectMany(static p => p.Value, static (p, v) => KeyValuePair.Create(p.Key, v)));
+            var returnUrl = $"{Request.PathBase}{Request.Path}{returnQuery}";
             return LocalRedirect($"/Account/Login?ReturnUrl={Uri.EscapeDataString(returnUrl)}");
         }
 
