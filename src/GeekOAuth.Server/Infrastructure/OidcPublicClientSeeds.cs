@@ -16,6 +16,7 @@ internal static class OidcPublicClientSeeds
         await SeedElectronClient(appManager, ct);
         await SeedGeekSeoWebClient(appManager, ct);
         await SeedGeekAdminClient(appManager, ct);
+        await SeedContentWriterV3Client(appManager, ct);
     }
 
     private static async Task SeedElectronClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
@@ -108,6 +109,45 @@ internal static class OidcPublicClientSeeds
             {
                 new Uri("https://admin.geekatyourspot.com/"),
                 new Uri("http://localhost:3002/"),
+            },
+            Permissions =
+            {
+                Permissions.Endpoints.Authorization,
+                Permissions.Endpoints.Token,
+                Permissions.Endpoints.EndSession,
+                Permissions.GrantTypes.AuthorizationCode,
+                Permissions.GrantTypes.RefreshToken,
+                Permissions.ResponseTypes.Code,
+                Permissions.Prefixes.Scope + "openid",
+                Permissions.Scopes.Profile,
+                Permissions.Scopes.Email,
+                Permissions.Prefixes.Scope + "offline_access",
+            },
+            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
+            ConsentType = ConsentTypes.Implicit,
+        }, ct);
+        Log.Information("OpenIddict client {ClientId} created", clientId);
+    }
+
+    private static async Task SeedContentWriterV3Client(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        const string clientId = "content-writer-v3";
+        if (await appManager.FindByClientIdAsync(clientId, ct) is not null) return;
+
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            ClientType = ClientTypes.Public,
+            DisplayName = "Content Writer V3",
+            RedirectUris =
+            {
+                new Uri("https://content-writer.geekatyourspot.com/login"),
+                new Uri("http://localhost:3000/login"),
+            },
+            PostLogoutRedirectUris =
+            {
+                new Uri("https://content-writer.geekatyourspot.com/"),
+                new Uri("http://localhost:3000/"),
             },
             Permissions =
             {
