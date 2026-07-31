@@ -24,9 +24,11 @@ public static class RateLimitExtensions
                     GetPartitionKey(httpContext),
                     _ => new SlidingWindowRateLimiterOptions
                     {
-                        PermitLimit = 20,
+                        // Vercel serverless shares egress IPs — keep this high enough for
+                        // production PKCE exchanges from app hosts.
+                        PermitLimit = 120,
                         Window = TimeSpan.FromMinutes(1),
-                        SegmentsPerWindow = 4,
+                        SegmentsPerWindow = 6,
                         QueueLimit = 0,
                     }));
 
