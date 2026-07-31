@@ -48,9 +48,9 @@ public static class RateLimitExtensions
                     GetPartitionKey(httpContext),
                     _ => new SlidingWindowRateLimiterOptions
                     {
-                        PermitLimit = 30,
+                        PermitLimit = 120,
                         Window = TimeSpan.FromMinutes(1),
-                        SegmentsPerWindow = 4,
+                        SegmentsPerWindow = 6,
                         QueueLimit = 0,
                     }));
         });
