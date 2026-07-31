@@ -62,7 +62,7 @@ public sealed class SecurityHeadersMiddleware(
             origins.Add("http://127.0.0.1");
         }
 
-        TryAddContentWriterVercelOrigin(origins, context.Request.Query["redirect_uri"].FirstOrDefault());
+        TryAddTrustedVercelOrigin(origins, context.Request.Query["redirect_uri"].FirstOrDefault());
 
         // Login page carries ReturnUrl=/connect/authorize?...&redirect_uri=...
         var returnUrl = context.Request.Query["ReturnUrl"].FirstOrDefault();
@@ -70,24 +70,28 @@ public sealed class SecurityHeadersMiddleware(
         {
             var decoded = Uri.UnescapeDataString(returnUrl);
             var redirectUri = ExtractQueryValue(decoded, "redirect_uri");
-            TryAddContentWriterVercelOrigin(origins, redirectUri);
+            TryAddTrustedVercelOrigin(origins, redirectUri);
         }
 
         return origins.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    private static void TryAddContentWriterVercelOrigin(List<string> origins, string? redirectUri)
+    private static void TryAddTrustedVercelOrigin(List<string> origins, string? redirectUri)
     {
         if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
             return;
 
-        if (uri.Host.Equals("content-writer-v3.vercel.app", StringComparison.OrdinalIgnoreCase)
-            || (uri.Host.StartsWith("content-writer-v3-", StringComparison.OrdinalIgnoreCase)
-                && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase)))
-        {
+        if (IsTrustedVercelHost(uri.Host))
             origins.Add($"{uri.Scheme}://{uri.Host}");
-        }
     }
+
+    private static bool IsTrustedVercelHost(string host) =>
+        host.Equals("content-writer-v3.vercel.app", StringComparison.OrdinalIgnoreCase)
+        || (host.StartsWith("content-writer-v3-", StringComparison.OrdinalIgnoreCase)
+            && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
+        || host.Equals("geek-content-workflow.vercel.app", StringComparison.OrdinalIgnoreCase)
+        || (host.StartsWith("geek-content-workflow-", StringComparison.OrdinalIgnoreCase)
+            && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase));
 
     private static string? ExtractQueryValue(string relativeOrAbsolute, string key)
     {

@@ -26,7 +26,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
             return true;
 
         var clientId = await GetClientIdAsync(application, cancellationToken);
-        return clientId == "content-writer-v3" && IsAllowedVercelCallback(uri);
+        return IsPreviewAwareClient(clientId) && IsAllowedVercelCallback(clientId, uri);
     }
 
     public override async ValueTask<bool> ValidatePostLogoutRedirectUriAsync(
@@ -38,14 +38,27 @@ public sealed partial class ContentWriterAwareApplicationManager(
             return true;
 
         var clientId = await GetClientIdAsync(application, cancellationToken);
-        return clientId == "content-writer-v3" && IsAllowedVercelPostLogout(uri);
+        return IsPreviewAwareClient(clientId) && IsAllowedVercelPostLogout(clientId, uri);
     }
 
-    private static bool IsAllowedVercelCallback(string uri) =>
-        ContentWriterVercelCallback().IsMatch(uri);
+    private static bool IsPreviewAwareClient(string? clientId) =>
+        clientId is "content-writer-v3" or "geek-content-workflow";
 
-    private static bool IsAllowedVercelPostLogout(string uri) =>
-        ContentWriterVercelPostLogout().IsMatch(uri);
+    private static bool IsAllowedVercelCallback(string? clientId, string uri) =>
+        clientId switch
+        {
+            "content-writer-v3" => ContentWriterVercelCallback().IsMatch(uri),
+            "geek-content-workflow" => GeekContentWorkflowVercelCallback().IsMatch(uri),
+            _ => false,
+        };
+
+    private static bool IsAllowedVercelPostLogout(string? clientId, string uri) =>
+        clientId switch
+        {
+            "content-writer-v3" => ContentWriterVercelPostLogout().IsMatch(uri),
+            "geek-content-workflow" => GeekContentWorkflowVercelPostLogout().IsMatch(uri),
+            _ => false,
+        };
 
     // Production: content-writer-v3.vercel.app
     // Previews: content-writer-v3-git-main-….vercel.app / content-writer-v3-<hash>-….vercel.app
@@ -54,4 +67,10 @@ public sealed partial class ContentWriterAwareApplicationManager(
 
     [GeneratedRegex(@"^https://content-writer-v3([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ContentWriterVercelPostLogout();
+
+    [GeneratedRegex(@"^https://geek-content-workflow([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekContentWorkflowVercelCallback();
+
+    [GeneratedRegex(@"^https://geek-content-workflow([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekContentWorkflowVercelPostLogout();
 }
