@@ -135,11 +135,13 @@ internal static class OidcPublicClientSeeds
         const string clientId = "geek-content-workflow";
         Uri[] redirectUris =
         [
+            new("https://geekcontentworkflow.geekatyourspot.com/auth/callback"),
             new("https://geek-content-workflow.vercel.app/auth/callback"),
             new("http://localhost:3000/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
+            new("https://geekcontentworkflow.geekatyourspot.com/"),
             new("https://geek-content-workflow.vercel.app/"),
             new("http://localhost:3000/"),
         ];
@@ -167,11 +169,11 @@ internal static class OidcPublicClientSeeds
             DisplayName = "Geek Content Workflow",
             RedirectUris =
             {
-                redirectUris[0], redirectUris[1],
+                redirectUris[0], redirectUris[1], redirectUris[2],
             },
             PostLogoutRedirectUris =
             {
-                postLogoutRedirectUris[0], postLogoutRedirectUris[1],
+                postLogoutRedirectUris[0], postLogoutRedirectUris[1], postLogoutRedirectUris[2],
             },
             Permissions =
             {
