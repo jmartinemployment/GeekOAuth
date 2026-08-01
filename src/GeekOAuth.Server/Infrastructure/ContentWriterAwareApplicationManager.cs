@@ -42,13 +42,14 @@ public sealed partial class ContentWriterAwareApplicationManager(
     }
 
     private static bool IsPreviewAwareClient(string? clientId) =>
-        clientId is "content-writer-v3" or "geek-content-workflow";
+        clientId is "content-writer-v3" or "geek-content-workflow" or "geek-content-creator";
 
     private static bool IsAllowedVercelCallback(string? clientId, string uri) =>
         clientId switch
         {
             "content-writer-v3" => ContentWriterVercelCallback().IsMatch(uri),
             "geek-content-workflow" => GeekContentWorkflowVercelCallback().IsMatch(uri),
+            "geek-content-creator" => GeekContentCreatorVercelCallback().IsMatch(uri),
             _ => false,
         };
 
@@ -57,6 +58,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
         {
             "content-writer-v3" => ContentWriterVercelPostLogout().IsMatch(uri),
             "geek-content-workflow" => GeekContentWorkflowVercelPostLogout().IsMatch(uri),
+            "geek-content-creator" => GeekContentCreatorVercelPostLogout().IsMatch(uri),
             _ => false,
         };
 
@@ -73,4 +75,10 @@ public sealed partial class ContentWriterAwareApplicationManager(
 
     [GeneratedRegex(@"^https://geek-content-workflow([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentWorkflowVercelPostLogout();
+
+    [GeneratedRegex(@"^https://geek-content-creator([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekContentCreatorVercelCallback();
+
+    [GeneratedRegex(@"^https://geek-content-creator([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekContentCreatorVercelPostLogout();
 }

@@ -91,6 +91,9 @@ public sealed class SecurityHeadersMiddleware(
             && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
         || host.Equals("geek-content-workflow.vercel.app", StringComparison.OrdinalIgnoreCase)
         || (host.StartsWith("geek-content-workflow-", StringComparison.OrdinalIgnoreCase)
+            && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
+        || host.Equals("geek-content-creator.vercel.app", StringComparison.OrdinalIgnoreCase)
+        || (host.StartsWith("geek-content-creator-", StringComparison.OrdinalIgnoreCase)
             && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase));
 
     private static string? ExtractQueryValue(string relativeOrAbsolute, string key)

@@ -9,7 +9,7 @@ Standalone OAuth 2.1 / OpenID Connect authorization server (.NET 10, OpenIddict 
 | `GeekOAuth.Abstractions` | Contracts, `ApplicationUser`, interfaces |
 | `GeekOAuth.Application` | Auth logic, audit, account services |
 | `GeekOAuth.Infrastructure` | Dapper repositories, Identity store |
-| `GeekOAuth.Server` | Host — OpenIddict, Razor UI, EF protocol tables |
+| `GeekOAuth.Server` | Host — OpenIddict, Razor UI, EF proto/l tables |
 
 ## Local run
 
