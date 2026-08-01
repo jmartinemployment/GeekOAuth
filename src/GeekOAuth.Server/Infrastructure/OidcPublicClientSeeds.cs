@@ -202,12 +202,14 @@ internal static class OidcPublicClientSeeds
         [
             new("https://geek-content-creator.geekatyourspot.com/auth/callback"),
             new("https://geek-content-creator.vercel.app/auth/callback"),
+            new("https://geek-content-creator-production.up.railway.app/auth/callback"),
             new("http://localhost:3003/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
             new("https://geek-content-creator.geekatyourspot.com/"),
             new("https://geek-content-creator.vercel.app/"),
+            new("https://geek-content-creator-production.up.railway.app/"),
             new("http://localhost:3003/"),
         ];
 
