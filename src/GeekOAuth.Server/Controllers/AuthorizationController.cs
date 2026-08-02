@@ -218,10 +218,17 @@ public class AuthorizationController(
     [HttpPost("~/connect/logout")]
     public async Task<IActionResult> Logout()
     {
+        var request = HttpContext.GetOpenIddictServerRequest();
         await signInManager.SignOutAsync();
+
+        // Honor validated post_logout_redirect_uri so apps can end SSO and return home.
+        var redirectUri = request?.PostLogoutRedirectUri;
+        if (string.IsNullOrEmpty(redirectUri))
+            redirectUri = "/";
+
         return SignOut(
             authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
-            properties: new AuthenticationProperties { RedirectUri = "/" });
+            properties: new AuthenticationProperties { RedirectUri = redirectUri });
     }
 
     private static IEnumerable<string> GetDestinations(Claim claim)
