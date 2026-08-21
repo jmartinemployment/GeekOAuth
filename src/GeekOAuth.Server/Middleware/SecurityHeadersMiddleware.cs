@@ -62,7 +62,7 @@ public sealed class SecurityHeadersMiddleware(
             origins.Add("http://127.0.0.1");
         }
 
-        TryAddTrustedVercelOrigin(origins, context.Request.Query["redirect_uri"].FirstOrDefault());
+        TryAddTrustedClientOrigin(origins, context.Request.Query["redirect_uri"].FirstOrDefault());
 
         // Login page carries ReturnUrl=/connect/authorize?...&redirect_uri=...
         var returnUrl = context.Request.Query["ReturnUrl"].FirstOrDefault();
@@ -70,23 +70,31 @@ public sealed class SecurityHeadersMiddleware(
         {
             var decoded = Uri.UnescapeDataString(returnUrl);
             var redirectUri = ExtractQueryValue(decoded, "redirect_uri");
-            TryAddTrustedVercelOrigin(origins, redirectUri);
+            TryAddTrustedClientOrigin(origins, redirectUri);
         }
 
         return origins.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    private static void TryAddTrustedVercelOrigin(List<string> origins, string? redirectUri)
+    private static void TryAddTrustedClientOrigin(List<string> origins, string? redirectUri)
     {
         if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
             return;
 
-        if (IsTrustedVercelHost(uri.Host))
+        if (IsTrustedClientHost(uri.Host))
             origins.Add($"{uri.Scheme}://{uri.Host}");
     }
 
-    private static bool IsTrustedVercelHost(string host) =>
-        host.Equals("content-writer-v3.vercel.app", StringComparison.OrdinalIgnoreCase)
+    /// <summary>
+    /// Hosts allowed to appear in form-action when they are the redirect_uri of the request in
+    /// hand. Our own apex and its subdomains qualify: every first-party app lives there, and
+    /// listing them one at a time meant each new host (geek-content-creator, then
+    /// geek-image-generator) broke sign-in with a CSP violation until someone edited an env var.
+    /// Vercel preview hosts stay enumerated — that domain is not ours, so it is not blanket-trusted.
+    /// </summary>
+    private static bool IsTrustedClientHost(string host) =>
+        IsOwnDomain(host)
+        || host.Equals("content-writer-v3.vercel.app", StringComparison.OrdinalIgnoreCase)
         || (host.StartsWith("content-writer-v3-", StringComparison.OrdinalIgnoreCase)
             && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
         || host.Equals("geek-content-workflow.vercel.app", StringComparison.OrdinalIgnoreCase)
@@ -95,6 +103,10 @@ public sealed class SecurityHeadersMiddleware(
         || host.Equals("geek-content-creator.vercel.app", StringComparison.OrdinalIgnoreCase)
         || (host.StartsWith("geek-content-creator-", StringComparison.OrdinalIgnoreCase)
             && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase));
+
+    private static bool IsOwnDomain(string host) =>
+        host.Equals("geekatyourspot.com", StringComparison.OrdinalIgnoreCase)
+        || host.EndsWith(".geekatyourspot.com", StringComparison.OrdinalIgnoreCase);
 
     private static string? ExtractQueryValue(string relativeOrAbsolute, string key)
     {
