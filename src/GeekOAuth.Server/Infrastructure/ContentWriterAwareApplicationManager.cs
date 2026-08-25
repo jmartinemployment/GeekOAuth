@@ -42,7 +42,8 @@ public sealed partial class ContentWriterAwareApplicationManager(
     }
 
     private static bool IsPreviewAwareClient(string? clientId) =>
-        clientId is "content-writer-v3" or "geek-content-workflow" or "geek-content-creator";
+        clientId is "content-writer-v3" or "geek-content-workflow" or "geek-content-creator"
+            or "geek-content-creator-v2";
 
     private static bool IsAllowedVercelCallback(string? clientId, string uri) =>
         clientId switch
@@ -50,6 +51,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
             "content-writer-v3" => ContentWriterVercelCallback().IsMatch(uri),
             "geek-content-workflow" => GeekContentWorkflowVercelCallback().IsMatch(uri),
             "geek-content-creator" => GeekContentCreatorVercelCallback().IsMatch(uri),
+            "geek-content-creator-v2" => GeekContentCreatorV2VercelCallback().IsMatch(uri),
             _ => false,
         };
 
@@ -59,6 +61,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
             "content-writer-v3" => ContentWriterVercelPostLogout().IsMatch(uri),
             "geek-content-workflow" => GeekContentWorkflowVercelPostLogout().IsMatch(uri),
             "geek-content-creator" => GeekContentCreatorVercelPostLogout().IsMatch(uri),
+            "geek-content-creator-v2" => GeekContentCreatorV2VercelPostLogout().IsMatch(uri),
             _ => false,
         };
 
@@ -81,4 +84,12 @@ public sealed partial class ContentWriterAwareApplicationManager(
 
     [GeneratedRegex(@"^https://geek-content-creator([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentCreatorVercelPostLogout();
+
+    // Production / team: content-creator-v2.vercel.app, content-creator-v2-phi.vercel.app
+    // Previews: content-creator-v2-git-…vercel.app
+    [GeneratedRegex(@"^https://content-creator-v2([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekContentCreatorV2VercelCallback();
+
+    [GeneratedRegex(@"^https://content-creator-v2([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekContentCreatorV2VercelPostLogout();
 }

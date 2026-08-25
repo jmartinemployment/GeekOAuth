@@ -19,6 +19,7 @@ internal static class OidcPublicClientSeeds
         await SeedGeekContentWorkflowClient(appManager, ct);
         await SeedContentWriterV3Client(appManager, ct);
         await SeedGeekContentCreatorClient(appManager, ct);
+        await SeedGeekContentCreatorV2Client(appManager, ct);
         await SeedGeekImageGeneratorClient(appManager, ct);
     }
 
@@ -233,6 +234,70 @@ internal static class OidcPublicClientSeeds
             ClientId = clientId,
             ClientType = ClientTypes.Public,
             DisplayName = "Geek Content Creator",
+            RedirectUris =
+            {
+                redirectUris[0], redirectUris[1], redirectUris[2],
+            },
+            PostLogoutRedirectUris =
+            {
+                postLogoutRedirectUris[0], postLogoutRedirectUris[1], postLogoutRedirectUris[2],
+            },
+            Permissions =
+            {
+                Permissions.Endpoints.Authorization,
+                Permissions.Endpoints.Token,
+                Permissions.Endpoints.EndSession,
+                Permissions.GrantTypes.AuthorizationCode,
+                Permissions.GrantTypes.RefreshToken,
+                Permissions.ResponseTypes.Code,
+                Permissions.Prefixes.Scope + "openid",
+                Permissions.Scopes.Profile,
+                Permissions.Scopes.Email,
+                Permissions.Prefixes.Scope + "offline_access",
+            },
+            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
+            ConsentType = ConsentTypes.Implicit,
+        }, ct);
+        Log.Information("OpenIddict client {ClientId} created", clientId);
+    }
+
+    private static async Task SeedGeekContentCreatorV2Client(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        const string clientId = "geek-content-creator-v2";
+        Uri[] redirectUris =
+        [
+            new("https://content-creator-v2-phi.vercel.app/auth/callback"),
+            new("https://content-creator-v2.vercel.app/auth/callback"),
+            new("http://localhost:3004/auth/callback"),
+        ];
+        Uri[] postLogoutRedirectUris =
+        [
+            new("https://content-creator-v2-phi.vercel.app/"),
+            new("https://content-creator-v2.vercel.app/"),
+            new("http://localhost:3004/"),
+        ];
+
+        var existing = await appManager.FindByClientIdAsync(clientId, ct);
+        if (existing is not null)
+        {
+            var descriptor = new OpenIddictApplicationDescriptor();
+            await appManager.PopulateAsync(descriptor, existing, ct);
+            descriptor.RedirectUris.Clear();
+            foreach (var uri in redirectUris)
+                descriptor.RedirectUris.Add(uri);
+            descriptor.PostLogoutRedirectUris.Clear();
+            foreach (var uri in postLogoutRedirectUris)
+                descriptor.PostLogoutRedirectUris.Add(uri);
+            await appManager.UpdateAsync(existing, descriptor, ct);
+            Log.Information("OpenIddict client {ClientId} redirect URIs updated", clientId);
+            return;
+        }
+
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            ClientType = ClientTypes.Public,
+            DisplayName = "Geek Content Creator v2",
             RedirectUris =
             {
                 redirectUris[0], redirectUris[1], redirectUris[2],
