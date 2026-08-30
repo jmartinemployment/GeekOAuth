@@ -43,7 +43,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
 
     private static bool IsPreviewAwareClient(string? clientId) =>
         clientId is "content-writer-v3" or "geek-content-workflow" or "geek-content-creator"
-            or "geek-content-creator-v2";
+            or "geek-content-creator-v2" or "geek-crawler";
 
     private static bool IsAllowedVercelCallback(string? clientId, string uri) =>
         clientId switch
@@ -52,6 +52,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
             "geek-content-workflow" => GeekContentWorkflowVercelCallback().IsMatch(uri),
             "geek-content-creator" => GeekContentCreatorVercelCallback().IsMatch(uri),
             "geek-content-creator-v2" => GeekContentCreatorV2VercelCallback().IsMatch(uri),
+            "geek-crawler" => GeekCrawlerVercelCallback().IsMatch(uri),
             _ => false,
         };
 
@@ -62,6 +63,7 @@ public sealed partial class ContentWriterAwareApplicationManager(
             "geek-content-workflow" => GeekContentWorkflowVercelPostLogout().IsMatch(uri),
             "geek-content-creator" => GeekContentCreatorVercelPostLogout().IsMatch(uri),
             "geek-content-creator-v2" => GeekContentCreatorV2VercelPostLogout().IsMatch(uri),
+            "geek-crawler" => GeekCrawlerVercelPostLogout().IsMatch(uri),
             _ => false,
         };
 
@@ -92,4 +94,10 @@ public sealed partial class ContentWriterAwareApplicationManager(
 
     [GeneratedRegex(@"^https://content-creator-v2([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentCreatorV2VercelPostLogout();
+
+    [GeneratedRegex(@"^https://geek-crawler([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekCrawlerVercelCallback();
+
+    [GeneratedRegex(@"^https://geek-crawler([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex GeekCrawlerVercelPostLogout();
 }
