@@ -17,12 +17,14 @@
 
 ```bash
 # Comma-separated CIDRs for the reverse-proxy hop that terminates TLS in front of GeekOAuth
-TRUSTED_PROXY_CIDRS=10.0.0.0/8,fd12:3456:789a::/48
+# Railway production (private networking / edge hop into the container):
+TRUSTED_PROXY_CIDRS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd12:3456:789a::/48,fc00::/7
 
 # Optional exact proxy IPs
 TRUSTED_PROXY_IPS=
 ```
 
+If unset on Railway, every request shares the edge hop IP for rate limits (fail closed). Set the CIDRs above before relying on per-client partitioning.
 Update procedure when Railway/ingress IP ranges change: revise these env vars and redeploy GeekOAuth; no code change.
 
 ## Tests to run after deploy
