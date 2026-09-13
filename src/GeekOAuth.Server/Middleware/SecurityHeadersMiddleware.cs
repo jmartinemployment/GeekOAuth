@@ -59,7 +59,11 @@ public sealed class SecurityHeadersMiddleware(
         if (environment.IsDevelopment())
         {
             origins.Add("http://localhost:3000");
-            origins.Add("http://127.0.0.1");
+            origins.Add("http://localhost:3003");
+            origins.Add("http://localhost:3004");
+            origins.Add("http://localhost:3005");
+            origins.Add("http://127.0.0.1:3000");
+            origins.Add("http://127.0.0.1:3005");
         }
 
         TryAddTrustedClientOrigin(origins, context.Request.Query["redirect_uri"].FirstOrDefault());
@@ -78,7 +82,21 @@ public sealed class SecurityHeadersMiddleware(
 
     private static void TryAddTrustedClientOrigin(List<string> origins, string? redirectUri)
     {
-        if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
+        if (!Uri.TryCreate(redirectUri, UriKind.Absolute, out var uri))
+            return;
+
+        // Local apps (Geek-Crawler on :3005, etc.) authenticate against prod auth over http://localhost.
+        // Chrome CSP form-action must include that exact origin or Login POSTs are blocked.
+        if (uri.Scheme == Uri.UriSchemeHttp
+            && (uri.IsLoopback || uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)))
+        {
+            origins.Add(uri.IsDefaultPort
+                ? $"{uri.Scheme}://{uri.Host}"
+                : $"{uri.Scheme}://{uri.Host}:{uri.Port}");
+            return;
+        }
+
+        if (uri.Scheme != Uri.UriSchemeHttps)
             return;
 
         if (IsTrustedClientHost(uri.Host))

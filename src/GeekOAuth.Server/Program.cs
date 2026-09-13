@@ -46,9 +46,10 @@ try
 
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
-        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        options.KnownIPNetworks.Clear();
-        options.KnownProxies.Clear();
+        // Fail closed: never clear KnownIPNetworks/KnownProxies unless explicit trusted hops
+        // are configured. Clearing them treats every client as a trusted proxy and lets
+        // X-Forwarded-For bypass rate limits. See docs/forwarded-headers-trust.md.
+        GeekOAuth.Server.ForwardedHeadersConfiguration.Apply(options, builder.Configuration, builder.Environment);
     });
 
     builder.Services.AddHsts(options =>
@@ -70,11 +71,14 @@ try
                       if (corsOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase))
                           return true;
                       // Content Writer V3 production + Vercel preview deployments
+                      // Preview hosts must use the hyphen separator (content-writer-v3-…).
+                      // Do not allow prefix-collision hosts like content-writer-v3evil.vercel.app.
                       return Uri.TryCreate(origin, UriKind.Absolute, out var uri)
                              && uri.Scheme == Uri.UriSchemeHttps
                              && (uri.Host.Equals("content-writer-v3.vercel.app", StringComparison.OrdinalIgnoreCase)
                                  || (uri.Host.StartsWith("content-writer-v3-", StringComparison.OrdinalIgnoreCase)
-                                     && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase)));
+                                     && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase)
+                                     && uri.Host.Length > "content-writer-v3-".Length));
                   })
                   .AllowAnyHeader()
                   .AllowAnyMethod()

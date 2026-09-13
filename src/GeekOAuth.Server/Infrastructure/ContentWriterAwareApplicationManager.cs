@@ -68,36 +68,37 @@ public sealed partial class ContentWriterAwareApplicationManager(
         };
 
     // Production: content-writer-v3.vercel.app
-    // Previews: content-writer-v3-git-main-….vercel.app / content-writer-v3-<hash>-….vercel.app
-    [GeneratedRegex(@"^https://content-writer-v3([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // Previews require a '-' separator: content-writer-v3-git-main-….vercel.app
+    // (without '-', content-writer-v3evil.vercel.app would incorrectly match)
+    [GeneratedRegex(@"^https://content-writer-v3(-[\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ContentWriterVercelCallback();
 
-    [GeneratedRegex(@"^https://content-writer-v3([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://content-writer-v3(-[\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex ContentWriterVercelPostLogout();
 
-    [GeneratedRegex(@"^https://geek-content-workflow([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://geek-content-workflow(-[\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentWorkflowVercelCallback();
 
-    [GeneratedRegex(@"^https://geek-content-workflow([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://geek-content-workflow(-[\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentWorkflowVercelPostLogout();
 
-    [GeneratedRegex(@"^https://geek-content-creator([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://geek-content-creator(-[\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentCreatorVercelCallback();
 
-    [GeneratedRegex(@"^https://geek-content-creator([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://geek-content-creator(-[\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentCreatorVercelPostLogout();
 
     // Production / team: content-creator-v2.vercel.app, content-creator-v2-phi.vercel.app
-    // Previews: content-creator-v2-git-…vercel.app
-    [GeneratedRegex(@"^https://content-creator-v2([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    // Previews: content-creator-v2-git-…vercel.app (hyphen-required suffix)
+    [GeneratedRegex(@"^https://content-creator-v2(-[\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentCreatorV2VercelCallback();
 
-    [GeneratedRegex(@"^https://content-creator-v2([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://content-creator-v2(-[\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekContentCreatorV2VercelPostLogout();
 
-    [GeneratedRegex(@"^https://geek-crawler([\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://geek-crawler(-[\w.-]+)?\.vercel\.app/auth/callback$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekCrawlerVercelCallback();
 
-    [GeneratedRegex(@"^https://geek-crawler([\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^https://geek-crawler(-[\w.-]+)?\.vercel\.app/?$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex GeekCrawlerVercelPostLogout();
 }

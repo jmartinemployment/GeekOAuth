@@ -332,12 +332,20 @@ internal static class OidcPublicClientSeeds
         Uri[] redirectUris =
         [
             new("https://geek-crawler.vercel.app/auth/callback"),
+            new("http://localhost:3000/auth/callback"),
+            new("http://localhost:3001/auth/callback"),
             new("http://localhost:3005/auth/callback"),
+            new("http://127.0.0.1:3000/auth/callback"),
+            new("http://127.0.0.1:3001/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
             new("https://geek-crawler.vercel.app/"),
+            new("http://localhost:3000/"),
+            new("http://localhost:3001/"),
             new("http://localhost:3005/"),
+            new("http://127.0.0.1:3000/"),
+            new("http://127.0.0.1:3001/"),
         ];
 
         var existing = await appManager.FindByClientIdAsync(clientId, ct);
@@ -356,19 +364,11 @@ internal static class OidcPublicClientSeeds
             return;
         }
 
-        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        var create = new OpenIddictApplicationDescriptor
         {
             ClientId = clientId,
             ClientType = ClientTypes.Public,
             DisplayName = "Geek-Crawler",
-            RedirectUris =
-            {
-                redirectUris[0], redirectUris[1],
-            },
-            PostLogoutRedirectUris =
-            {
-                postLogoutRedirectUris[0], postLogoutRedirectUris[1],
-            },
             Permissions =
             {
                 Permissions.Endpoints.Authorization,
@@ -384,7 +384,12 @@ internal static class OidcPublicClientSeeds
             },
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
             ConsentType = ConsentTypes.Implicit,
-        }, ct);
+        };
+        foreach (var uri in redirectUris)
+            create.RedirectUris.Add(uri);
+        foreach (var uri in postLogoutRedirectUris)
+            create.PostLogoutRedirectUris.Add(uri);
+        await appManager.CreateAsync(create, ct);
         Log.Information("OpenIddict client {ClientId} created", clientId);
     }
 
