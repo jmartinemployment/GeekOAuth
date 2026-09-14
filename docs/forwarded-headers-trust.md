@@ -18,7 +18,8 @@
 ```bash
 # Comma-separated CIDRs for the reverse-proxy hop that terminates TLS in front of GeekOAuth
 # Railway production (private networking / edge hop into the container):
-TRUSTED_PROXY_CIDRS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fd12:3456:789a::/48,fc00::/7
+# Include 100.64.0.0/10 (RFC 6598 / CGNAT) — Railway edge often peers from this range.
+TRUSTED_PROXY_CIDRS=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10,fd12:3456:789a::/48,fc00::/7
 
 # Optional exact proxy IPs
 TRUSTED_PROXY_IPS=
