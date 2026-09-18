@@ -265,16 +265,26 @@ internal static class OidcPublicClientSeeds
     private static async Task SeedGeekContentCreatorV2Client(IOpenIddictApplicationManager appManager, CancellationToken ct)
     {
         const string clientId = "geek-content-creator-v2";
+        // OpenIddict matches redirect_uri exactly — no prefix patterns, unlike the CSP host
+        // allowlist in SecurityHeadersMiddleware. Every host the app is actually served from has to
+        // be listed here or sign-in fails with ID2043.
+        //
+        // The project-alias hosts below are what Vercel serves this project on today. They are
+        // stable aliases, not per-deployment URLs (those carry a build hash and change every push).
         Uri[] redirectUris =
         [
             new("https://content-creator-v2-phi.vercel.app/auth/callback"),
             new("https://content-creator-v2.vercel.app/auth/callback"),
+            new("https://content-creator-v2-jeff-martins-projects-66716453.vercel.app/auth/callback"),
+            new("https://content-creator-v2-git-main-jeff-martins-projects-66716453.vercel.app/auth/callback"),
             new("http://localhost:3004/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
             new("https://content-creator-v2-phi.vercel.app/"),
             new("https://content-creator-v2.vercel.app/"),
+            new("https://content-creator-v2-jeff-martins-projects-66716453.vercel.app/"),
+            new("https://content-creator-v2-git-main-jeff-martins-projects-66716453.vercel.app/"),
             new("http://localhost:3004/"),
         ];
 
@@ -294,19 +304,14 @@ internal static class OidcPublicClientSeeds
             return;
         }
 
-        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
+        // Built from the arrays rather than indexed into them: the previous form listed
+        // redirectUris[0..2] explicitly, so adding a host here would have been silently dropped on a
+        // fresh create while working on update — the two paths disagreeing about the same client.
+        var descriptorToCreate = new OpenIddictApplicationDescriptor
         {
             ClientId = clientId,
             ClientType = ClientTypes.Public,
             DisplayName = "Geek Content Creator v2",
-            RedirectUris =
-            {
-                redirectUris[0], redirectUris[1], redirectUris[2],
-            },
-            PostLogoutRedirectUris =
-            {
-                postLogoutRedirectUris[0], postLogoutRedirectUris[1], postLogoutRedirectUris[2],
-            },
             Permissions =
             {
                 Permissions.Endpoints.Authorization,
@@ -322,7 +327,13 @@ internal static class OidcPublicClientSeeds
             },
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
             ConsentType = ConsentTypes.Implicit,
-        }, ct);
+        };
+        foreach (var uri in redirectUris)
+            descriptorToCreate.RedirectUris.Add(uri);
+        foreach (var uri in postLogoutRedirectUris)
+            descriptorToCreate.PostLogoutRedirectUris.Add(uri);
+
+        await appManager.CreateAsync(descriptorToCreate, ct);
         Log.Information("OpenIddict client {ClientId} created", clientId);
     }
 
