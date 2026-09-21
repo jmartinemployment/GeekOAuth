@@ -58,3 +58,7 @@ agent-transcripts/
 **/.github/copilot-instructions.md
 GEMINI.md
 **/GEMINI.md
+
+# Local noise that must never be committed — swept in by `git add -A` once already.
+.DS_Store
+src/GeekOAuth.Server/logs/
