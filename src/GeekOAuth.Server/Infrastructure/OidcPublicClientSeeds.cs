@@ -9,6 +9,16 @@ namespace GeekOAuth.Server.Infrastructure;
 /// </summary>
 internal static class OidcPublicClientSeeds
 {
+    /// <summary>
+    /// Content Creator's clients, projects and their billing data.
+    /// </summary>
+    /// <remarks>
+    /// Granted to geek-content-creator-v2 only. GeekAPI requires it on every project route and
+    /// answers 403 without it, so this authority being shared across Geek apps does not make one
+    /// app's token good for another app's client records.
+    /// </remarks>
+    private const string ContentCreatorManageScope = "content-creator.manage";
+
     public static async Task SeedPublicClientsAsync(IServiceProvider services, CancellationToken ct = default)
     {
         await using var scope = services.CreateAsyncScope();
@@ -299,8 +309,23 @@ internal static class OidcPublicClientSeeds
             descriptor.PostLogoutRedirectUris.Clear();
             foreach (var uri in postLogoutRedirectUris)
                 descriptor.PostLogoutRedirectUris.Add(uri);
+            // Permissions are reconciled here too, not only on create. This client already exists
+            // in every environment that matters, so a scope added to the create path alone would
+            // never reach it: the app would request content-creator.manage, OpenIddict would
+            // refuse to issue it, and GeekAPI would answer 403 to a user who looks correctly
+            // signed in. Same class of bug as the one noted below about redirect URIs, on the
+            // other field.
+            var contentCreatorScope = Permissions.Prefixes.Scope + ContentCreatorManageScope;
+            if (!descriptor.Permissions.Contains(contentCreatorScope))
+            {
+                descriptor.Permissions.Add(contentCreatorScope);
+                Log.Information(
+                    "OpenIddict client {ClientId} granted scope {Scope}",
+                    clientId,
+                    ContentCreatorManageScope);
+            }
             await appManager.UpdateAsync(existing, descriptor, ct);
-            Log.Information("OpenIddict client {ClientId} redirect URIs updated", clientId);
+            Log.Information("OpenIddict client {ClientId} redirect URIs and permissions updated", clientId);
             return;
         }
 
@@ -324,6 +349,7 @@ internal static class OidcPublicClientSeeds
                 Permissions.Scopes.Profile,
                 Permissions.Scopes.Email,
                 Permissions.Prefixes.Scope + "offline_access",
+                Permissions.Prefixes.Scope + ContentCreatorManageScope,
             },
             Requirements = { Requirements.Features.ProofKeyForCodeExchange },
             ConsentType = ConsentTypes.Implicit,

@@ -19,6 +19,14 @@ public class ScopeSeeder(
             new OpenIddictScopeDescriptor { Name = "offline_access",  DisplayName = "Offline access (refresh tokens)" },
             new OpenIddictScopeDescriptor { Name = "internal.api",    DisplayName = "Platform internal API" },
             new OpenIddictScopeDescriptor { Name = "devices.manage",  DisplayName = "Manage trusted devices" },
+            // Content Creator's clients, projects and the billing data on them. This authority is
+            // shared across Geek apps, so a valid token says only that someone signed in; this is
+            // what says they were granted that data. GeekAPI returns 403 without it.
+            new OpenIddictScopeDescriptor
+            {
+                Name = "content-creator.manage",
+                DisplayName = "Manage Content Creator clients and projects",
+            },
         };
 
         foreach (var descriptor in scopes)
