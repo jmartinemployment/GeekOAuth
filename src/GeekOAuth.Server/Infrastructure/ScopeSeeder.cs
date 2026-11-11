@@ -27,6 +27,12 @@ public class ScopeSeeder(
                 Name = "content-creator.manage",
                 DisplayName = "Manage Content Creator clients and projects",
             },
+            // GeekSocial's connected Pages, reply inbox, posting and audit. GeekAPI returns 403 without it.
+            new OpenIddictScopeDescriptor
+            {
+                Name = "geeksocial.manage",
+                DisplayName = "Manage GeekSocial pages, replies and posts",
+            },
         };
 
         foreach (var descriptor in scopes)
