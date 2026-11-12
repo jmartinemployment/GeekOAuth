@@ -127,7 +127,8 @@ public sealed class SecurityHeadersMiddleware(
         || host.Equals("geek-crawler.vercel.app", StringComparison.OrdinalIgnoreCase)
         || (host.StartsWith("geek-crawler-", StringComparison.OrdinalIgnoreCase)
             && host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase))
-        || host.Equals("geek-social.vercel.app", StringComparison.OrdinalIgnoreCase);
+        || host.Equals("geek-social.vercel.app", StringComparison.OrdinalIgnoreCase)
+        || host.Equals("geek-crm.vercel.app", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsOwnDomain(string host) =>
         host.Equals("geekatyourspot.com", StringComparison.OrdinalIgnoreCase)

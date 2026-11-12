@@ -33,6 +33,12 @@ public class ScopeSeeder(
                 Name = "geeksocial.manage",
                 DisplayName = "Manage GeekSocial pages, replies and posts",
             },
+            // Geek-CRM's leads, deals, catalog and customers. GeekAPI returns 403 without it.
+            new OpenIddictScopeDescriptor
+            {
+                Name = "geekcrm.manage",
+                DisplayName = "Manage Geek-CRM leads, deals and customers",
+            },
         };
 
         foreach (var descriptor in scopes)

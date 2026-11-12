@@ -25,6 +25,12 @@ internal static class OidcPublicClientSeeds
     /// </summary>
     private const string GeekSocialManageScope = "geeksocial.manage";
 
+    /// <summary>
+    /// Geek-CRM's leads, deals, catalog and customers. Granted to geekcrm only; GeekAPI requires it on a signed-in
+    /// caller of api/crm and then reads the caller's tenant and role from tenant_users.
+    /// </summary>
+    private const string GeekCrmManageScope = "geekcrm.manage";
+
     public static async Task SeedPublicClientsAsync(IServiceProvider services, CancellationToken ct = default)
     {
         await using var scope = services.CreateAsyncScope();
@@ -40,6 +46,77 @@ internal static class OidcPublicClientSeeds
         await SeedGeekImageGeneratorClient(appManager, ct);
         await SeedGeekReportsClient(appManager, ct);
         await SeedGeekSocialClient(appManager, ct);
+        await SeedGeekCrmClient(appManager, ct);
+    }
+
+    private static async Task SeedGeekCrmClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    {
+        const string clientId = "geekcrm";
+        Uri[] redirectUris =
+        [
+            new("https://geek-crm.geekatyourspot.com/auth/callback"),
+            new("https://geek-crm.vercel.app/auth/callback"),
+            new("http://localhost:3007/auth/callback"),
+        ];
+        Uri[] postLogoutRedirectUris =
+        [
+            new("https://geek-crm.geekatyourspot.com/signed-out"),
+            new("https://geek-crm.vercel.app/signed-out"),
+            new("http://localhost:3007/signed-out"),
+        ];
+
+        var existing = await appManager.FindByClientIdAsync(clientId, ct);
+        if (existing is not null)
+        {
+            // Redirect addresses and the scope are reconciled on every start, so a change here reaches
+            // an environment where the client already exists, not only a fresh one.
+            var descriptor = new OpenIddictApplicationDescriptor();
+            await appManager.PopulateAsync(descriptor, existing, ct);
+            descriptor.RedirectUris.Clear();
+            foreach (var uri in redirectUris)
+                descriptor.RedirectUris.Add(uri);
+            descriptor.PostLogoutRedirectUris.Clear();
+            foreach (var uri in postLogoutRedirectUris)
+                descriptor.PostLogoutRedirectUris.Add(uri);
+            var crmScope = Permissions.Prefixes.Scope + GeekCrmManageScope;
+            if (!descriptor.Permissions.Contains(crmScope))
+            {
+                descriptor.Permissions.Add(crmScope);
+                Log.Information("OpenIddict client {ClientId} granted scope {Scope}", clientId, GeekCrmManageScope);
+            }
+            await appManager.UpdateAsync(existing, descriptor, ct);
+            Log.Information("OpenIddict client {ClientId} redirect URIs and permissions updated", clientId);
+            return;
+        }
+
+        var create = new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            ClientType = ClientTypes.Public,
+            DisplayName = "Geek-CRM",
+            Permissions =
+            {
+                Permissions.Endpoints.Authorization,
+                Permissions.Endpoints.Token,
+                Permissions.Endpoints.EndSession,
+                Permissions.GrantTypes.AuthorizationCode,
+                Permissions.GrantTypes.RefreshToken,
+                Permissions.ResponseTypes.Code,
+                Permissions.Prefixes.Scope + "openid",
+                Permissions.Scopes.Profile,
+                Permissions.Scopes.Email,
+                Permissions.Prefixes.Scope + "offline_access",
+                Permissions.Prefixes.Scope + GeekCrmManageScope,
+            },
+            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
+            ConsentType = ConsentTypes.Implicit,
+        };
+        foreach (var uri in redirectUris)
+            create.RedirectUris.Add(uri);
+        foreach (var uri in postLogoutRedirectUris)
+            create.PostLogoutRedirectUris.Add(uri);
+        await appManager.CreateAsync(create, ct);
+        Log.Information("OpenIddict client {ClientId} created", clientId);
     }
 
     private static async Task SeedGeekSocialClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
