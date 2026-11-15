@@ -1,4 +1,5 @@
 using GeekOAuth.Abstractions.Models;
+using GeekOAuth.Abstractions.Repositories;
 using GeekOAuth.Abstractions.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -10,18 +11,39 @@ namespace GeekOAuth.Application.Services;
 
 public sealed class UserAccountService(
     UserManager<ApplicationUser> userManager,
+    IUserRepository users,
     IAuthEmailService emailService,
     IConfiguration config) : IUserAccountService
 {
-    public async Task<AccountOperationResult> RegisterAsync(string email, string password, CancellationToken cancellationToken = default)
+    public Task<AccountOperationResult> RegisterAsync(string email, string password, CancellationToken cancellationToken = default) =>
+        CreateAsync(new ApplicationUser { UserName = email, Email = email, EmailConfirmed = false }, password, cancellationToken);
+
+    public async Task<AccountOperationResult> ProvisionTenantOwnerAsync(Guid tenantId, string email, string password, string? displayName, CancellationToken cancellationToken = default)
     {
-        var user = new ApplicationUser
+        if (tenantId == Guid.Empty)
+            return new AccountOperationResult(false, "A tenant is required.");
+
+        var tenant = tenantId.ToString("D");
+        if (await users.FindByTenantAsync(tenant) is not null)
+            return new AccountOperationResult(false, "That tenant already has an owner.", Conflict: true);
+
+        if (await userManager.FindByEmailAsync(email) is not null)
+            return new AccountOperationResult(false, "That email already has a login.", Conflict: true);
+
+        var owner = new ApplicationUser
         {
             UserName = email,
             Email = email,
             EmailConfirmed = false,
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim(),
+            Tenant = tenant,
         };
+        return await CreateAsync(owner, password, cancellationToken);
+    }
 
+    private async Task<AccountOperationResult> CreateAsync(ApplicationUser user, string password, CancellationToken cancellationToken)
+    {
+        var email = user.Email!;
         var result = await userManager.CreateAsync(user, password);
         if (!result.Succeeded)
             return new AccountOperationResult(false, string.Join("; ", result.Errors.Select(e => e.Description)));
