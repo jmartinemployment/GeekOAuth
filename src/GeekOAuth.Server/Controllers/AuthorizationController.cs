@@ -91,8 +91,7 @@ public class AuthorizationController(
         if (!string.IsNullOrEmpty(user.DisplayName))
             identity.SetClaim("display_name", user.DisplayName);
 
-        if (!string.IsNullOrEmpty(user.Tenant))
-            identity.SetClaim("tenant", user.Tenant);
+        SetTenantClaims(identity, user);
 
         identity.SetScopes(request.GetScopes());
         identity.SetResources(await scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
@@ -149,8 +148,7 @@ public class AuthorizationController(
                 .SetClaim(Claims.Name, await userManager.GetUserNameAsync(user))
                 .SetClaims(Claims.Role, [.. await userManager.GetRolesAsync(user)]);
 
-            if (!string.IsNullOrEmpty(user.Tenant))
-                identity.SetClaim("tenant", user.Tenant);
+            SetTenantClaims(identity, user);
 
             identity.SetDestinations(GetDestinations);
 
@@ -211,6 +209,9 @@ public class AuthorizationController(
         if (!string.IsNullOrEmpty(user.Tenant))
             claims["tenant"] = user.Tenant;
 
+        if (TenantIdOf(user) is { } tenantId)
+            claims[TenantIdClaim] = tenantId;
+
         return Ok(claims);
     }
 
@@ -231,6 +232,26 @@ public class AuthorizationController(
             properties: new AuthenticationProperties { RedirectUri = redirectUri });
     }
 
+    /// <summary>The claim Geek-Receptionist's GeekAPI reads to know which tenant a signed-in owner belongs to.</summary>
+    internal const string TenantIdClaim = "tenant_id";
+
+    /// <summary>
+    /// The user's tenant as a GUID in its canonical form, or null when the user has no tenant or the stored tenant is
+    /// not a GUID (a tenant that is some other kind of name is carried by the "tenant" claim alone and never
+    /// becomes a tenant_id, so a resource server never reads a non-GUID as one).
+    /// </summary>
+    internal static string? TenantIdOf(ApplicationUser user) =>
+        Guid.TryParse(user.Tenant, out var id) && id != Guid.Empty ? id.ToString("D") : null;
+
+    private static void SetTenantClaims(ClaimsIdentity identity, ApplicationUser user)
+    {
+        if (!string.IsNullOrEmpty(user.Tenant))
+            identity.SetClaim("tenant", user.Tenant);
+
+        if (TenantIdOf(user) is { } tenantId)
+            identity.SetClaim(TenantIdClaim, tenantId);
+    }
+
     private static IEnumerable<string> GetDestinations(Claim claim)
     {
         return claim.Type switch
@@ -242,7 +263,7 @@ public class AuthorizationController(
             Claims.Role => claim.Subject?.HasScope(Scopes.Roles) == true
                 ? [Destinations.AccessToken, Destinations.IdentityToken]
                 : [],
-            "tenant" or "display_name" => [Destinations.AccessToken, Destinations.IdentityToken],
+            "tenant" or TenantIdClaim or "display_name" => [Destinations.AccessToken, Destinations.IdentityToken],
             _ => [Destinations.AccessToken],
         };
     }
