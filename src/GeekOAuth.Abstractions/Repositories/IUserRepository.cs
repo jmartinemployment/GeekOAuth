@@ -8,7 +8,6 @@ public interface IUserRepository
     Task<ApplicationUser?> FindByIdAsync(string userId);
     Task<ApplicationUser?> FindByNameAsync(string normalizedUserName);
     Task<ApplicationUser?> FindByEmailAsync(string normalizedEmail);
-    Task<ApplicationUser?> FindByTenantAsync(string tenant);
     Task CreateAsync(ApplicationUser user);
     Task UpdateAsync(ApplicationUser user);
     Task DeleteAsync(string userId);

@@ -32,13 +32,6 @@ public class UserRepository(IDbConnectionFactory connectionFactory) : IUserRepos
             "SELECT * FROM asp_net_users WHERE normalized_email = @Email", new { Email = normalizedEmail });
     }
 
-    public async Task<ApplicationUser?> FindByTenantAsync(string tenant)
-    {
-        using var db = Connect();
-        return await db.QueryFirstOrDefaultAsync<ApplicationUser>(
-            "SELECT * FROM asp_net_users WHERE tenant = @Tenant ORDER BY id LIMIT 1", new { Tenant = tenant });
-    }
-
     public async Task CreateAsync(ApplicationUser user)
     {
         using var db = Connect();
