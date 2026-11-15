@@ -10,9 +10,9 @@ namespace GeekOAuth.Controllers;
 
 public sealed record ProvisionTenantOwnerRequest(
     [Required] Guid TenantId,
-    [Required, EmailAddress] string Email,
-    [Required, MinLength(8)] string Password,
-    string? DisplayName);
+    [Required, EmailAddress, MaxLength(254)] string Email,
+    [Required, MinLength(8), MaxLength(128)] string Password,
+    [MaxLength(200)] string? DisplayName);
 
 /// <summary>
 /// Creates the login of a Geek-Receptionist tenant's owner (docs/Geek-Receptionist.md section 7, signup step 4). Only
