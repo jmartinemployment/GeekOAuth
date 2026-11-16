@@ -18,7 +18,7 @@
         {
             <p class="auth-hint" role="status">Check your email for a confirmation link.@(Env.IsDevelopment() ? " In Development, the link is also written to the server console." : "")</p>
         }
-        <p><a href="/Account/Login">Back to sign in</a></p>
+        <p><a href="@Url.Page("/Account/Login", new { returnUrl = Model.ReturnUrl })">@(Model.ReturnUrl is null ? "Back to sign in" : "Continue to sign in")</a></p>
     }
     else
     {
@@ -28,6 +28,7 @@
         }
 
         <form method="post">
+            <input type="hidden" asp-for="ReturnUrl" />
             <div class="auth-field">
                 <label asp-for="Input.Email">Email</label>
                 <input asp-for="Input.Email" type="email" autocomplete="email" aria-describedby="email-validation" autofocus />
@@ -45,6 +46,6 @@
             </div>
             <button type="submit" class="auth-button">Create account</button>
         </form>
-        <p class="auth-footer"><a href="/Account/Login">Already have an account?</a></p>
+        <p class="auth-footer"><a href="@Url.Page("/Account/Login", new { returnUrl = Model.ReturnUrl })">Already have an account?</a></p>
     }
 </div>

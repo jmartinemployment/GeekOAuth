@@ -9,6 +9,6 @@
     <p class="auth-hint" role="status">@Model.Message</p>
     @if (Model.Succeeded)
     {
-        <a class="auth-button" href="/Account/Login">Sign in</a>
+        <a class="auth-button" href="@Url.Page("/Account/Login", new { returnUrl = Model.ReturnUrl })">Sign in</a>
     }
 </div>

@@ -45,7 +45,7 @@ internal static class OidcPublicClientSeeds
         await SeedGeekCrawlerClient(appManager, ct);
         await SeedGeekImageGeneratorClient(appManager, ct);
         await SeedGeekReportsClient(appManager, ct);
-        await SeedGeekSocialClient(appManager, ct);
+        await SeedGeekSocialClient(appManager, scope.ServiceProvider.GetRequiredService<IConfiguration>(), ct);
         await RemoveGeekReceptionistClient(appManager, ct);
         await SeedGeekCrmClient(appManager, ct);
     }
@@ -118,72 +118,81 @@ internal static class OidcPublicClientSeeds
         Log.Information("OpenIddict client {ClientId} created", clientId);
     }
 
-    private static async Task SeedGeekSocialClient(IOpenIddictApplicationManager appManager, CancellationToken ct)
+    /// <summary>
+    /// geek-social is a confidential client: its Next.js server holds the secret, exchanges the code, refreshes the tokens and never
+    /// hands them to the browser. Without GEEK_SOCIAL_CLIENT_SECRET the client is left exactly as it is, so a deploy that precedes
+    /// the secret does not sign anyone out; the error log is the signal that the change has not been applied.
+    /// </summary>
+    private static async Task SeedGeekSocialClient(IOpenIddictApplicationManager appManager, IConfiguration config, CancellationToken ct)
     {
         const string clientId = "geek-social";
+        var secret = config["GEEK_SOCIAL_CLIENT_SECRET"];
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            Log.Error(
+                "GEEK_SOCIAL_CLIENT_SECRET is not set: OpenIddict client {ClientId} was left unchanged, so it is not confidential and its callback is not /api/auth/callback",
+                clientId);
+            return;
+        }
+
         Uri[] redirectUris =
         [
-            new("https://geek-social.geekatyourspot.com/auth/callback"),
-            new("http://localhost:3006/auth/callback"),
+            new("https://geek-social.geekatyourspot.com/api/auth/callback"),
+            new("http://localhost:3006/api/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
             new("https://geek-social.geekatyourspot.com/signed-out"),
             new("http://localhost:3006/signed-out"),
         ];
+        string[] permissions =
+        [
+            Permissions.Endpoints.Authorization,
+            Permissions.Endpoints.Token,
+            Permissions.Endpoints.EndSession,
+            Permissions.GrantTypes.AuthorizationCode,
+            Permissions.GrantTypes.RefreshToken,
+            Permissions.ResponseTypes.Code,
+            Permissions.Prefixes.Scope + "openid",
+            Permissions.Scopes.Profile,
+            Permissions.Scopes.Email,
+            Permissions.Scopes.Roles,
+            Permissions.Prefixes.Scope + "offline_access",
+            Permissions.Prefixes.Scope + GeekSocialManageScope,
+        ];
 
         var existing = await appManager.FindByClientIdAsync(clientId, ct);
+        var descriptor = new OpenIddictApplicationDescriptor();
         if (existing is not null)
         {
-            // Redirect addresses and the scope are reconciled on every start, so a change here reaches
-            // an environment where the client already exists, not only a fresh one.
-            var descriptor = new OpenIddictApplicationDescriptor();
+            // Everything here is reconciled on every start, so a change reaches an environment where the client already exists.
             await appManager.PopulateAsync(descriptor, existing, ct);
             descriptor.RedirectUris.Clear();
-            foreach (var uri in redirectUris)
-                descriptor.RedirectUris.Add(uri);
             descriptor.PostLogoutRedirectUris.Clear();
-            foreach (var uri in postLogoutRedirectUris)
-                descriptor.PostLogoutRedirectUris.Add(uri);
-            var socialScope = Permissions.Prefixes.Scope + GeekSocialManageScope;
-            if (!descriptor.Permissions.Contains(socialScope))
-            {
-                descriptor.Permissions.Add(socialScope);
-                Log.Information("OpenIddict client {ClientId} granted scope {Scope}", clientId, GeekSocialManageScope);
-            }
-            await appManager.UpdateAsync(existing, descriptor, ct);
-            Log.Information("OpenIddict client {ClientId} redirect URIs and permissions updated", clientId);
+        }
+
+        descriptor.ClientId = clientId;
+        descriptor.ClientType = ClientTypes.Confidential;
+        descriptor.ClientSecret = secret;
+        descriptor.DisplayName = "GeekSocial";
+        descriptor.ConsentType = ConsentTypes.Implicit;
+        foreach (var uri in redirectUris)
+            descriptor.RedirectUris.Add(uri);
+        foreach (var uri in postLogoutRedirectUris)
+            descriptor.PostLogoutRedirectUris.Add(uri);
+        foreach (var permission in permissions)
+            descriptor.Permissions.Add(permission);
+        descriptor.Requirements.Add(Requirements.Features.ProofKeyForCodeExchange);
+
+        if (existing is null)
+        {
+            await appManager.CreateAsync(descriptor, ct);
+            Log.Information("OpenIddict client {ClientId} created as a confidential client", clientId);
             return;
         }
 
-        var create = new OpenIddictApplicationDescriptor
-        {
-            ClientId = clientId,
-            ClientType = ClientTypes.Public,
-            DisplayName = "GeekSocial",
-            Permissions =
-            {
-                Permissions.Endpoints.Authorization,
-                Permissions.Endpoints.Token,
-                Permissions.Endpoints.EndSession,
-                Permissions.GrantTypes.AuthorizationCode,
-                Permissions.GrantTypes.RefreshToken,
-                Permissions.ResponseTypes.Code,
-                Permissions.Prefixes.Scope + "openid",
-                Permissions.Scopes.Profile,
-                Permissions.Scopes.Email,
-                Permissions.Prefixes.Scope + "offline_access",
-                Permissions.Prefixes.Scope + GeekSocialManageScope,
-            },
-            Requirements = { Requirements.Features.ProofKeyForCodeExchange },
-            ConsentType = ConsentTypes.Implicit,
-        };
-        foreach (var uri in redirectUris)
-            create.RedirectUris.Add(uri);
-        foreach (var uri in postLogoutRedirectUris)
-            create.PostLogoutRedirectUris.Add(uri);
-        await appManager.CreateAsync(create, ct);
-        Log.Information("OpenIddict client {ClientId} created", clientId);
+        await appManager.UpdateAsync(existing, descriptor, ct);
+        Log.Information("OpenIddict client {ClientId} reconciled as a confidential client", clientId);
     }
 
     /// <summary>

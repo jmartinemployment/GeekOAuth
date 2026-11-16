@@ -17,6 +17,7 @@ public class ScopeSeeder(
             new OpenIddictScopeDescriptor { Name = "profile",         DisplayName = "Profile" },
             new OpenIddictScopeDescriptor { Name = "email",           DisplayName = "Email address" },
             new OpenIddictScopeDescriptor { Name = "offline_access",  DisplayName = "Offline access (refresh tokens)" },
+            new OpenIddictScopeDescriptor { Name = "roles",           DisplayName = "Roles" },
             new OpenIddictScopeDescriptor { Name = "internal.api",    DisplayName = "Platform internal API" },
             new OpenIddictScopeDescriptor { Name = "devices.manage",  DisplayName = "Manage trusted devices" },
             // Content Creator's clients, projects and the billing data on them. This authority is

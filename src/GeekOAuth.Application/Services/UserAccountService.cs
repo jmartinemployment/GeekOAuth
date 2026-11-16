@@ -1,4 +1,5 @@
 using GeekOAuth.Abstractions.Models;
+using GeekOAuth.Abstractions.Security;
 using GeekOAuth.Abstractions.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ public sealed class UserAccountService(
     IAuthEmailService emailService,
     IConfiguration config) : IUserAccountService
 {
-    public async Task<AccountOperationResult> RegisterAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<AccountOperationResult> RegisterAsync(string email, string password, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
         var user = new ApplicationUser
         {
@@ -35,7 +36,8 @@ public sealed class UserAccountService(
         }
 
         var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var link = BuildLink("Account/ConfirmEmail", "userId", user.Id, "code", token);
+        var link = BuildLink("Account/ConfirmEmail", "userId", user.Id, "code", token,
+            AuthorizeReturnUrl.IsValid(returnUrl) ? returnUrl : null);
         await emailService.SendEmailConfirmationAsync(email, link, cancellationToken);
 
         return new AccountOperationResult(true, UserId: user.Id);
@@ -109,10 +111,11 @@ public sealed class UserAccountService(
             : new AccountOperationResult(false, string.Join("; ", result.Errors.Select(e => e.Description)));
     }
 
-    private string BuildLink(string page, string idParam, string idValue, string codeParam, string codeValue)
+    private string BuildLink(string page, string idParam, string idValue, string codeParam, string codeValue, string? returnUrl = null)
     {
         var issuer = config["ISSUER_URL"]?.TrimEnd('/') ?? "https://localhost:5001";
         var encodedCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(codeValue));
-        return $"{issuer}/{page}?{idParam}={Uri.EscapeDataString(idValue)}&{codeParam}={encodedCode}";
+        var link = $"{issuer}/{page}?{idParam}={Uri.EscapeDataString(idValue)}&{codeParam}={encodedCode}";
+        return returnUrl is null ? link : $"{link}&returnUrl={Uri.EscapeDataString(returnUrl)}";
     }
 }
