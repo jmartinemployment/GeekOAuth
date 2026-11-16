@@ -15,14 +15,17 @@ public class TwoFactorModel(
 {
     [BindProperty] public InputModel Input { get; set; } = new();
     [BindProperty] public string? ReturnUrl { get; set; }
+    // "Keep me signed in" from the password step; the 2FA step issues the cookie, so it has to carry the choice.
+    [BindProperty] public bool RememberMe { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public async Task<IActionResult> OnGetAsync(string? returnUrl = null)
+    public async Task<IActionResult> OnGetAsync(string? returnUrl = null, bool rememberMe = false)
     {
         var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
         if (user is null) return RedirectToPage("Login");
 
         ReturnUrl = returnUrl;
+        RememberMe = rememberMe;
         return Page();
     }
 
@@ -34,10 +37,17 @@ public class TwoFactorModel(
         if (user is null) return RedirectToPage("Login");
 
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var code = Input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+        var spaceless = Input.Code.Replace(" ", string.Empty);
+        var digits = spaceless.Replace("-", string.Empty);
 
-        var result = await signInManager.TwoFactorAuthenticatorSignInAsync(
-            code, isPersistent: false, rememberClient: Input.RememberDevice);
+        // The two kinds of code never overlap: an authenticator code is exactly six digits, and a
+        // recovery code is longer. The input's shape picks the path; a failed attempt never falls through to the other.
+        var isAuthenticatorCode = digits.Length == 6 && digits.All(char.IsAsciiDigit);
+
+        var result = isAuthenticatorCode
+            ? await signInManager.TwoFactorAuthenticatorSignInAsync(
+                digits, isPersistent: RememberMe, rememberClient: Input.RememberDevice)
+            : await signInManager.TwoFactorRecoveryCodeSignInAsync(spaceless);
 
         if (result.Succeeded)
         {
@@ -46,13 +56,14 @@ public class TwoFactorModel(
         }
 
         audit.TwoFactorFailure(user.Id, ip);
-        ErrorMessage = "Invalid authenticator code.";
+        ErrorMessage = "Invalid authenticator or recovery code.";
         return Page();
     }
 
     public class InputModel
     {
-        [Required, StringLength(6, MinimumLength = 6)]
+        // Up to 32 so a pasted "123 456" or an Identity recovery code is not truncated or rejected before the server normalises it.
+        [Required, StringLength(32)]
         public string Code { get; set; } = string.Empty;
 
         public bool RememberDevice { get; set; }

@@ -11,6 +11,9 @@ public sealed class AuthEmailService(IConfiguration config, IHostEnvironment env
 {
     private static readonly Serilog.ILogger Logger = Log.ForContext<AuthEmailService>();
 
+    public bool IsDeliveryAvailable =>
+        environment.IsDevelopment() || !string.IsNullOrWhiteSpace(config["SMTP_HOST"]);
+
     public Task SendEmailConfirmationAsync(string email, string confirmationLink, CancellationToken cancellationToken = default) =>
         SendAsync(email, "Confirm your Geek account", $"Confirm your email:\n\n{confirmationLink}", cancellationToken);
 
@@ -19,13 +22,18 @@ public sealed class AuthEmailService(IConfiguration config, IHostEnvironment env
 
     private async Task SendAsync(string to, string subject, string body, CancellationToken cancellationToken)
     {
-        if (environment.IsDevelopment() || string.IsNullOrWhiteSpace(config["SMTP_HOST"]))
+        // The body carries a live confirmation or reset token, so it is only ever written to the log in Development.
+        if (environment.IsDevelopment())
         {
             Logger.Information("Auth email (dev/log): To={To} Subject={Subject} Body={Body}", to, subject, body);
             return;
         }
 
-        using var client = new SmtpClient(config["SMTP_HOST"], int.Parse(config["SMTP_PORT"] ?? "587", System.Globalization.CultureInfo.InvariantCulture))
+        if (!IsDeliveryAvailable)
+            throw new InvalidOperationException(
+                $"Cannot send \"{subject}\": SMTP_HOST is not configured and the environment is not Development.");
+
+        using var client = new SmtpClient(config["SMTP_HOST"], int.Parse(config["SMTP_SUBMISSION_PORT"] ?? "587", System.Globalization.CultureInfo.InvariantCulture))
         {
             EnableSsl = true,
             Credentials = new NetworkCredential(config["SMTP_USER"], config["SMTP_PASSWORD"]),

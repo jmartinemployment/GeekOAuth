@@ -11,6 +11,7 @@ public class ForgotPasswordModel(IUserAccountService accounts) : PageModel
 {
     [BindProperty] public InputModel Input { get; set; } = new();
     public bool EmailSent { get; private set; }
+    public string? ErrorMessage { get; private set; }
 
     public void OnGet() { }
 
@@ -18,7 +19,13 @@ public class ForgotPasswordModel(IUserAccountService accounts) : PageModel
     {
         if (!ModelState.IsValid) return Page();
 
-        await accounts.RequestPasswordResetAsync(Input.Email);
+        var result = await accounts.RequestPasswordResetAsync(Input.Email);
+        if (!result.Succeeded)
+        {
+            ErrorMessage = result.Error ?? "Password reset failed.";
+            return Page();
+        }
+
         EmailSent = true;
         return Page();
     }

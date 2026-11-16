@@ -31,13 +31,12 @@ public sealed class UserAccountService(
             var confirmToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
             await userManager.ConfirmEmailAsync(user, confirmToken);
             Log.Information("Email auto-confirmed for {Email} (SMTP_HOST not configured)", email);
+            return new AccountOperationResult(true, UserId: user.Id, AutoConfirmed: true);
         }
-        else
-        {
-            var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-            var link = BuildLink("Account/ConfirmEmail", "userId", user.Id, "code", token);
-            await emailService.SendEmailConfirmationAsync(email, link, cancellationToken);
-        }
+
+        var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var link = BuildLink("Account/ConfirmEmail", "userId", user.Id, "code", token);
+        await emailService.SendEmailConfirmationAsync(email, link, cancellationToken);
 
         return new AccountOperationResult(true, UserId: user.Id);
     }
@@ -66,6 +65,13 @@ public sealed class UserAccountService(
 
     public async Task<AccountOperationResult> RequestPasswordResetAsync(string email, CancellationToken cancellationToken = default)
     {
+        // Checked before the user lookup so the answer is the same for every address and reveals nothing about accounts.
+        if (!emailService.IsDeliveryAvailable)
+        {
+            Log.Warning("Password reset requested but email delivery is not configured (SMTP_HOST unset); no reset token was generated");
+            return new AccountOperationResult(false, "Password reset is unavailable because email delivery is not configured. Contact the administrator.");
+        }
+
         var user = await userManager.FindByEmailAsync(email);
         if (user is null)
             return new AccountOperationResult(true);

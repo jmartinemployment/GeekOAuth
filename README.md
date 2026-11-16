@@ -38,7 +38,7 @@ dotnet run --project src/GeekOAuth.Server --configuration Release
 
 Required variables: `DATABASE_URL`, `ISSUER_URL`, `SIGNING_CERT_BASE64`, `CORS_ORIGINS`, `CLIENT_SECRET_GEEKAPI`, `CLIENT_SECRET_GEEKWEBSITE`, `DATA_PROTECTION_PURPOSE`.
 
-Optional SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`.
+Optional SMTP: `SMTP_HOST`, `SMTP_SUBMISSION_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`. Without `SMTP_HOST` outside Development, new accounts are auto-confirmed and password reset is refused with an error (links are never written to the logs). In Development the links are logged instead of mailed.
 
 After first deploy:
 

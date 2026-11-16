@@ -9,8 +9,8 @@
 
     @if (Model.CodesGenerated)
     {
-        <p class="auth-hint">Save these recovery codes in a secure place:</p>
-        <ul class="auth-codes">
+        <p class="auth-hint" role="status">Save these recovery codes in a secure place:</p>
+        <ul class="auth-codes" aria-label="Recovery codes">
             @foreach (var code in Model.RecoveryCodes)
             {
                 <li>@code</li>
@@ -26,13 +26,14 @@
 
         @if (!string.IsNullOrEmpty(Model.ErrorMessage))
         {
-            <div class="auth-error">@Model.ErrorMessage</div>
+            <div class="auth-error" role="alert">@Model.ErrorMessage</div>
         }
 
         <form method="post">
             <div class="auth-field">
                 <label asp-for="Input.Code">Verification code</label>
-                <input asp-for="Input.Code" autocomplete="one-time-code" />
+                <input asp-for="Input.Code" type="text" inputmode="numeric" autocomplete="one-time-code" aria-describedby="code-validation" />
+                <span asp-validation-for="Input.Code" id="code-validation" class="auth-validation"></span>
             </div>
             <button type="submit" class="auth-button">Verify</button>
         </form>

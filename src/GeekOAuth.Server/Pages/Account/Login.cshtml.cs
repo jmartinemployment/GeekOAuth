@@ -76,7 +76,7 @@ public class LoginModel(
             TempData[ReturnUrlTempDataKey] = ReturnUrl;
 
         if (attempt.Result.RequiresTwoFactor)
-            return RedirectToPage("TwoFactor", new { returnUrl = ReturnUrl });
+            return RedirectToPage("TwoFactor", new { returnUrl = ReturnUrl, rememberMe = Input.RememberMe });
 
         if (attempt.Result.IsLockedOut)
         {

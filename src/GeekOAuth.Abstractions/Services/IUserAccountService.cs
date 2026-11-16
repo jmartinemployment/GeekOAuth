@@ -8,4 +8,5 @@ public interface IUserAccountService
     Task<AccountOperationResult> ResetPasswordAsync(string email, string code, string newPassword, CancellationToken cancellationToken = default);
 }
 
-public sealed record AccountOperationResult(bool Succeeded, string? Error = null, string? UserId = null);
+/// <param name="AutoConfirmed">True when registration confirmed the email itself because no SMTP server is configured, so no confirmation email was sent.</param>
+public sealed record AccountOperationResult(bool Succeeded, string? Error = null, string? UserId = null, bool AutoConfirmed = false);

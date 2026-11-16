@@ -10,7 +10,7 @@
 
     @if (Model.Scopes.Any())
     {
-        <ul class="auth-scope-list">
+        <ul class="auth-scope-list" aria-label="Requested permissions">
             @foreach (var scope in Model.Scopes)
             {
                 <li>@scope</li>

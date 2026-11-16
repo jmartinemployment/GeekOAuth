@@ -19,17 +19,68 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Full history lets SonarCloud attribute issues to the correct commits/authors.
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
+      - name: Setup Java (required by the SonarScanner engine)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install SonarScanner for .NET
+        run: dotnet tool install --global dotnet-sonarscanner --version 12.0.0
+
       - name: Restore
         run: dotnet restore GeekOAuth.slnx
+
+      # Fork and Dependabot pull requests receive no secrets, so Sonar cannot authenticate there.
+      # On a push to main a missing token is a misconfiguration and fails the job.
+      - name: Check SonarCloud token
+        id: sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "${SONAR_TOKEN}" ]; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+          elif [ "${GITHUB_EVENT_NAME}" = "push" ]; then
+            echo "::error::SONAR_TOKEN is not set; SonarCloud analysis cannot run on a push to main."
+            exit 1
+          else
+            echo "::notice::SONAR_TOKEN is unavailable for this pull request (fork or Dependabot); SonarCloud analysis is skipped."
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Begin SonarCloud analysis
+        if: steps.sonar.outputs.enabled == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          dotnet sonarscanner begin
+          /k:"jmartinemployment_GeekOAuth"
+          /o:"jmartinemployment"
+          /d:sonar.host.url="https://sonarcloud.io"
+          /d:sonar.token="${SONAR_TOKEN}"
+          /d:sonar.qualitygate.wait=true
+          /d:sonar.cs.opencover.reportsPaths="coverage/**/coverage.opencover.xml"
 
       - name: Build
         run: dotnet build GeekOAuth.slnx --configuration Release --no-restore
 
       - name: Test (Testcontainers + PKCE E2E)
-        run: dotnet test GeekOAuth.slnx --configuration Release --no-build --verbosity normal
+        run: >
+          dotnet test GeekOAuth.slnx --configuration Release --no-build --verbosity normal
+          --collect:"XPlat Code Coverage" --results-directory ./coverage
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: End SonarCloud analysis
+        if: steps.sonar.outputs.enabled == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="${SONAR_TOKEN}"

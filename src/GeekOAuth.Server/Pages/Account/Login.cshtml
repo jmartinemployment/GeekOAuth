@@ -9,25 +9,25 @@
 
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
-        <div class="auth-success">@Model.SuccessMessage</div>
+        <div class="auth-success" role="status">@Model.SuccessMessage</div>
     }
 
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
-        <div class="auth-error">@Model.ErrorMessage</div>
+        <div class="auth-error" role="alert">@Model.ErrorMessage</div>
     }
 
     <form method="post" autocomplete="on">
         <div class="auth-field">
             <label asp-for="Input.Email">Email</label>
-            <input asp-for="Input.Email" type="email" autocomplete="email" autofocus />
-            <span asp-validation-for="Input.Email" class="auth-validation"></span>
+            <input asp-for="Input.Email" type="email" autocomplete="email" aria-describedby="email-validation" autofocus />
+            <span asp-validation-for="Input.Email" id="email-validation" class="auth-validation"></span>
         </div>
 
         <div class="auth-field">
             <label asp-for="Input.Password">Password</label>
-            <input asp-for="Input.Password" type="password" autocomplete="current-password" />
-            <span asp-validation-for="Input.Password" class="auth-validation"></span>
+            <input asp-for="Input.Password" type="password" autocomplete="current-password" aria-describedby="password-validation" />
+            <span asp-validation-for="Input.Password" id="password-validation" class="auth-validation"></span>
         </div>
 
         <div class="auth-field auth-checkbox">

@@ -12,6 +12,7 @@ public class RegisterModel(IUserAccountService accounts) : PageModel
     [BindProperty] public InputModel Input { get; set; } = new();
     public string? ErrorMessage { get; set; }
     public bool RegistrationSent { get; private set; }
+    public bool AutoConfirmed { get; private set; }
 
     public void OnGet() { }
 
@@ -27,6 +28,7 @@ public class RegisterModel(IUserAccountService accounts) : PageModel
         }
 
         RegistrationSent = true;
+        AutoConfirmed = result.AutoConfirmed;
         return Page();
     }
 

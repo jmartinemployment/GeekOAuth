@@ -6,19 +6,19 @@
 
 <div class="auth-card">
     <h1 class="auth-title">Two-factor authentication</h1>
-    <p class="auth-hint">Enter the 6-digit code from your authenticator app.</p>
+    <p class="auth-hint" id="twofactor-hint">Enter the 6-digit code from your authenticator app, or one of your recovery codes.</p>
 
     @if (!string.IsNullOrEmpty(Model.ErrorMessage))
     {
-        <div class="auth-error">@Model.ErrorMessage</div>
+        <div class="auth-error" role="alert">@Model.ErrorMessage</div>
     }
 
     <form method="post">
         <div class="auth-field">
             <label asp-for="Input.Code">Authenticator code</label>
             <input asp-for="Input.Code" type="text" inputmode="numeric" autocomplete="one-time-code"
-                   maxlength="6" autofocus />
-            <span asp-validation-for="Input.Code" class="auth-validation"></span>
+                   aria-describedby="twofactor-hint code-validation" autofocus />
+            <span asp-validation-for="Input.Code" id="code-validation" class="auth-validation"></span>
         </div>
 
         <div class="auth-field auth-checkbox">
@@ -27,6 +27,7 @@
         </div>
 
         <input type="hidden" asp-for="ReturnUrl" />
+        <input type="hidden" asp-for="RememberMe" />
         <button type="submit" class="auth-button">Verify</button>
     </form>
 </div>

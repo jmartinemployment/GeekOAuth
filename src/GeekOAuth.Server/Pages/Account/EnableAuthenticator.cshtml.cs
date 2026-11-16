@@ -36,6 +36,12 @@ public class EnableAuthenticatorModel(UserManager<ApplicationUser> userManager) 
         var user = await userManager.GetUserAsync(User);
         if (user is null) return RedirectToPage("Login");
 
+        if (!ModelState.IsValid)
+        {
+            await LoadSharedKeyAndQrCodeUriAsync(user);
+            return Page();
+        }
+
         var code = Input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
         var isValid = await userManager.VerifyTwoFactorTokenAsync(
             user,
@@ -90,7 +96,8 @@ public class EnableAuthenticatorModel(UserManager<ApplicationUser> userManager) 
 
     public class InputModel
     {
-        [Required, StringLength(6, MinimumLength = 6)]
+        // Up to 16 so a code pasted as "123 456" is normalised by the server rather than rejected.
+        [Required, StringLength(16)]
         public string Code { get; set; } = string.Empty;
     }
 }

@@ -62,3 +62,10 @@ GEMINI.md
 # Local noise that must never be committed — swept in by `git add -A` once already.
 .DS_Store
 src/GeekOAuth.Server/logs/
+
+# SonarScanner for .NET working directories (created by `dotnet sonarscanner begin`)
+.sonarqube/
+.sonar/
+
+# Test coverage output consumed by SonarCloud
+coverage/

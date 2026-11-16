@@ -1,0 +1,20 @@
+# Keep the build context to what `dotnet restore GeekOAuth.slnx` and `dotnet publish` need.
+**/bin/
+**/obj/
+**/logs/
+.git/
+.github/
+.githooks/
+.sonarqube/
+.sonar/
+coverage/
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key
+*.crt
+.claude/
+.cursor/
+.DS_Store

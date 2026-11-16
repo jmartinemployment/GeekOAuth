@@ -9,4 +9,7 @@ WORKDIR /app
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 COPY --from=build /app/publish .
+# Run as the image's built-in non-root "app" user (uid 1654); keep the Serilog file-sink dir writable.
+RUN mkdir -p /app/logs && chown -R app:app /app/logs
+USER app
 ENTRYPOINT ["dotnet", "GeekOAuth.Server.dll"]

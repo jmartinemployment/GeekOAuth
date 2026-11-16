@@ -1,12 +1,12 @@
 name: Deploy Railway
 
+# Deploys only after CI has passed on a push to main; workflow_dispatch is the manual override.
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - '.github/workflows/ci.yml'
 
 concurrency:
   group: deploy-railway-production
@@ -15,16 +15,22 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    # `event == 'push'` excludes pull-request CI runs whose head branch happens to be named main.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # For workflow_run this is the commit CI validated, not whatever main is by now.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli@latest
+        run: npm install -g @railway/cli@5.74.0
 
       - name: Deploy GeekOAuth service
         working-directory: .
