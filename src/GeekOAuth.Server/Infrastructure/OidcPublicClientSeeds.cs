@@ -124,13 +124,11 @@ internal static class OidcPublicClientSeeds
         Uri[] redirectUris =
         [
             new("https://geek-social.geekatyourspot.com/auth/callback"),
-            new("https://geek-social.vercel.app/auth/callback"),
             new("http://localhost:3006/auth/callback"),
         ];
         Uri[] postLogoutRedirectUris =
         [
             new("https://geek-social.geekatyourspot.com/signed-out"),
-            new("https://geek-social.vercel.app/signed-out"),
             new("http://localhost:3006/signed-out"),
         ];
 
